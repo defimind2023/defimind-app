@@ -1,0 +1,14 @@
+packages:
+  - 'packages/*'
+  - 'e2e'
+
+# vitest needs esbuild's platform binary, so its install script must be allowed to run.
+onlyBuiltDependencies:
+  - esbuild
+  # better-sqlite3 needs its native binding built or downloaded at install time.
+  - better-sqlite3
+
+# bigint-buffer's native toBigIntLE has GHSA-3gc7-fjrx-p6mg and no fixed release: every copy is
+# replaced by its own JavaScript path, with no binding (docs/security/dependency-triage.md).
+overrides:
+  bigint-buffer: file:vendor/bigint-buffer

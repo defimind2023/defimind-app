@@ -1,0 +1,199 @@
+/* The "ink" language: flat, hairlines, one blue. */
+:root {
+  --bg: #0a0f1a;
+  --surface: #0e1524;
+  --raise: #131c2e;
+  --line: #1d2739;
+  --line2: #2a3650;
+  --text: #e7ebf1;
+  --muted: #8792a5;
+  --faint: #5d6879;
+  --blue: #2c5ac8;
+  --blue-hi: #3a6ad6;
+  --blue-ink: #9db7f0;
+  --ok: #3fb68b;
+  --warn: #d9a441;
+  --stop: #e5605c;
+  --sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 var(--sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A solid header with a hairline under it. */
+.brand {
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px
+    max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+}
+.mark {
+  display: flex;
+  align-items: center;
+  /* The logo's own square already leaves clear space to its right. */
+  gap: 4px;
+  max-width: 40rem;
+  margin: 0 auto;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* The company logo keeps its own colours (ink brief, "The DefiMind logo"); the UI stays flat. */
+.logo {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+main {
+  max-width: 40rem;
+  margin: 22px auto 40px;
+  padding: 20px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  main {
+    margin: 16px 16px 32px;
+  }
+}
+/* A stop, the kill after Phantom was refused or any refusal: the stop rail and title. */
+main[data-state='stop'] {
+  border-left: 2px solid var(--stop);
+}
+
+h1 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+main[data-state='stop'] h1 {
+  color: var(--stop);
+}
+main[data-state='done'] h1 {
+  color: var(--ok);
+}
+p {
+  margin: 0 0 10px;
+  color: #c6cfdd;
+}
+
+/* The one action: solid blue. */
+button,
+a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 20px;
+  border: 1px solid var(--blue);
+  border-radius: 5px;
+  background: var(--blue);
+  color: #fff;
+  font: 600 14px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+button:hover,
+a:hover {
+  background: var(--blue-hi);
+  border-color: var(--blue-hi);
+}
+/* After a refusal, retrying is not the page's recommendation: a secondary, in stop text. */
+main[data-state='stop'] button,
+main[data-state='stop'] a {
+  background: transparent;
+  border-color: var(--line2);
+  color: var(--stop);
+}
+main[data-state='stop'] button:hover,
+main[data-state='stop'] a:hover {
+  background: var(--raise);
+}
+:focus-visible {
+  outline: 2px solid var(--blue-ink);
+  outline-offset: 2px;
+}
+
+form {
+  margin-top: 6px;
+}
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+input {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  min-height: 46px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: var(--raise);
+  color: var(--text);
+  font: 600 20px var(--sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+  text-transform: none;
+}
+[role='alert'] {
+  color: var(--stop);
+}
+
+/* What the transaction carries, read from its bytes: a raised mono panel, never cut. */
+.decoded {
+  margin: 16px 0 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raise);
+}
+.decoded h2 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.decoded ol {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+.decoded li {
+  margin: 6px 0;
+  color: var(--text);
+  font: 500 14px/1.55 var(--mono);
+  word-break: break-all;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

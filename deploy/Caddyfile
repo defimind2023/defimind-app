@@ -1,0 +1,15 @@
+# HTTPS for the public routes only: the agents', the owner panel's and the receipt key. Caddy gets
+# the certificate for {$DOMAIN} by itself. The admin and bot routes never come through here.
+{$DOMAIN} {
+	@public path /v1/agent/* /health /panel /panel/* /owner/* /v1/owner/* /v1/receipts/key /v1/anchors
+	handle @public {
+		reverse_proxy guard-core:8080 {
+			# guard-core's per-IP limit reads this header: set it to the real client, never pass the
+			# client's own.
+			header_up Fly-Client-IP {remote_host}
+		}
+	}
+	handle {
+		respond 404
+	}
+}

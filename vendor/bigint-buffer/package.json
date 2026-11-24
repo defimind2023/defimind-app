@@ -1,0 +1,9 @@
+{
+  "name": "bigint-buffer",
+  "version": "1.1.5-defimind.1",
+  "description": "bigint-buffer's own JavaScript path without its native binding (GHSA-3gc7-fjrx-p6mg).",
+  "private": true,
+  "license": "Apache-2.0",
+  "main": "index.cjs",
+  "types": "index.d.ts"
+}

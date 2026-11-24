@@ -1,0 +1,35 @@
+{
+  "name": "@defimind/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server exposing payment tools to agents.",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "start:env": "tsx --env-file=.env src/main.ts",
+    "setup": "tsx src/main.ts setup",
+    "dev": "tsx --env-file=.env src/main.ts",
+    "mock-guard": "tsx examples/mock-guard/index.ts",
+    "demo": "tsx examples/demo-agent/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@defimind/sdk": "workspace:*",
+    "@defimind/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "pino": "^9.14.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,294 @@
+import { CHAINS } from '@defimind/shared'
+import { z } from 'zod'
+
+const secret = z.string().min(32, 'use at least 32 characters; generate with openssl rand -hex 32')
+
+// `KEY=` in a .env file means unset, as the .env.example files leave it.
+function optional<T extends z.ZodType>(schema: T) {
+  return z.preprocess((value) => (value === '' ? undefined : value), schema.optional())
+}
+
+const evmAddress = z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'expected a 0x address')
+
+/**
+ * CR-019. PUBLIC_URL is the address the owner opens; on Render the host sets RENDER_EXTERNAL_URL.
+ * The passkey's RP id and origin follow from it unless set, since the browser binds both to it.
+ */
+function defaults(env: unknown): unknown {
+  if (typeof env !== 'object' || env === null) {
+    return env
+  }
+  const raw = env as Record<string, unknown>
+  const given = (name: string) => (raw[name] === '' ? undefined : raw[name])
+  const publicUrl = given('PUBLIC_URL') ?? given('RENDER_EXTERNAL_URL')
+  const url =
+    typeof publicUrl === 'string' && URL.canParse(publicUrl) ? new URL(publicUrl) : undefined
+  return {
+    ...raw,
+    PUBLIC_URL: publicUrl,
+    PASSKEY_RP_ID: given('PASSKEY_RP_ID') ?? url?.hostname,
+    PASSKEY_ORIGIN: given('PASSKEY_ORIGIN') ?? url?.origin,
+  }
+}
+
+const settings = z
+  .object({
+    PORT: z.coerce.number().int().positive().default(8787),
+    /** Loopback unless set: a deployment opts in to listening beyond this machine. */
+    HOST: z.union([z.ipv4(), z.ipv6(), z.hostname()]).default('127.0.0.1'),
+    /**
+     * Set in a deployment to split the routes over two listeners: the agent routes alone on
+     * PUBLIC_HOST:PUBLIC_PORT, behind Fly's TLS, and the admin and bot routes on HOST:PORT, on the
+     * private network. Unset, one listener on HOST:PORT serves everything, as in a local run.
+     */
+    PUBLIC_PORT: optional(z.coerce.number().int().positive()),
+    PUBLIC_HOST: z.union([z.ipv4(), z.ipv6(), z.hostname()]).default('0.0.0.0'),
+    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+    DATABASE_URL: z.string().min(1).default('file:./data/guard.db'),
+
+    ADMIN_TOKEN: secret,
+    /** CR-019. False leaves /v1/admin/* unregistered, as a one-listener host must. */
+    ADMIN_ROUTES: z.enum(['true', 'false']).default('true'),
+    /**
+     * CR-022. One listener beyond loopback with the admin routes on puts them on the public
+     * interface; that refuses to start unless this says it is meant, and then it warns at start.
+     */
+    ALLOW_PUBLIC_ADMIN: z.enum(['true', 'false']).default('false'),
+    /** CR-019. Issues the first enrol link from the panel, until a passkey exists. */
+    SETUP_CODE: optional(secret),
+    PUBLIC_URL: optional(z.url({ protocol: /^https$/ })),
+    /** Where generated keys live (CR-019). Defaults to keys/ next to the database. */
+    KEYS_DIR: optional(z.string().min(1)),
+    /**
+     * CR-017. The Telegram bot is optional: all three or none. Without them guard-core sends no
+     * webhook and has no /v1/bot routes; the owner is reached through the panel's Web Push alone.
+     */
+    BOT_TOKEN: optional(secret),
+    BOT_URL: optional(z.string().min(1)),
+    BOT_WEBHOOK_SECRET: optional(secret),
+
+    SOLANA_CHAIN: z.enum([CHAINS.solanaDevnet, CHAINS.solanaMainnet]).default(CHAINS.solanaDevnet),
+    SOLANA_RPC_URL: optional(z.string().min(1)),
+    SOLANA_HOT_WALLET_KEYPAIR: optional(z.string().min(1)),
+    SQUADS_MULTISIG: optional(z.string().min(1)),
+
+    /** Base is off unless this names the chain; then every value below must be present. */
+    BASE_CHAIN: optional(z.enum([CHAINS.baseSepolia, CHAINS.base])),
+    BASE_RPC_URL: optional(z.url()),
+    SAFE_ADDRESS: optional(evmAddress),
+    /** Path to a file holding the hot wallet's private key, 0x and 64 hex digits. */
+    BASE_HOT_WALLET_KEY_FILE: optional(z.string().min(1)),
+    // The raw key in the environment is retired. Refused rather than ignored, so an old .env
+    // has to lose the key instead of keeping a copy nobody reads.
+    HOT_WALLET_PRIVATE_KEY: optional(z.never()),
+    /** Only where shared/addresses.ts has no verified value for the chain yet (CR-005). */
+    BASE_USDC: optional(evmAddress),
+    BASE_ALLOWANCE_MODULE: optional(evmAddress),
+
+    /**
+     * Robinhood Chain is off unless this names it (CR-007). Its USDG and Allowance Module come from
+     * shared/addresses.ts only, so there is no env value for either.
+     */
+    ROBINHOOD_CHAIN: optional(z.enum([CHAINS.robinhoodTestnet, CHAINS.robinhood])),
+    ROBINHOOD_RPC_URL: optional(z.url()),
+    ROBINHOOD_SAFE_ADDRESS: optional(evmAddress),
+    /** Path to a file holding the hot wallet's private key, 0x and 64 hex digits. */
+    ROBINHOOD_HOT_WALLET_KEY_FILE: optional(z.string().min(1)),
+
+    /** An Ed25519 private key in PEM that signs a receipt for every executed payment. Off unset. */
+    RECEIPT_SIGNING_KEY_FILE: optional(z.string().min(1)),
+
+    /**
+     * At or above this amount an intent is approved only with the owner's passkey, never by a
+     * Telegram tap alone. PASSKEY_RP_ID and PASSKEY_ORIGIN name guard-core's public address, which
+     * the passkey is bound to. Off unset.
+     */
+    PASSKEY_ABOVE: optional(z.string().regex(/^(0|[1-9]\d*)$/)),
+    PASSKEY_RP_ID: optional(z.hostname()),
+    PASSKEY_ORIGIN: optional(z.url({ protocol: /^https$/ })),
+
+    /**
+     * CR-012. When false, the default, the panel is the only place to approve: a Telegram tap can
+     * still reject, never approve, so a stolen Telegram account moves nothing.
+     */
+    TELEGRAM_APPROVALS: z.enum(['true', 'false']).default('false'),
+    /**
+     * CR-012. Web Push to the owner's panel: a P-256 private key in PEM, and the contact the push
+     * services may reach (mailto: or https:). The key is made when no file is given (CR-019) and
+     * the contact defaults to PUBLIC_URL; push is off with neither contact.
+     */
+    VAPID_PRIVATE_KEY_FILE: optional(z.string().min(1)),
+    VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:\/\/)\S+$/)),
+    /**
+     * CR-013. Anchoring of the execution chain: a Solana cluster, its RPC, and a keypair of its own,
+     * funded for fees only and never the hot wallet. Off without the cluster and its RPC; the
+     * keypair is made when no file is given (CR-019).
+     */
+    ANCHOR_CHAIN: optional(z.enum([CHAINS.solanaDevnet, CHAINS.solanaMainnet])),
+    ANCHOR_RPC_URL: optional(z.url({ protocol: /^https?$/ })),
+    ANCHOR_KEY_FILE: optional(z.string().min(1)),
+    /** CR-014. The onchain signing page; with it, the owner kill links each chain's kill there. */
+    SIGN_PAGE_URL: optional(z.url({ protocol: /^https$/ })),
+    /** CR-019. The signing page's build, served at /sign. Defaults to packages/onchain/web/dist. */
+    SIGN_DIR: optional(z.string().min(1)),
+    /** The panel's static build, served at /panel. Defaults to packages/panel/dist. */
+    PANEL_DIR: optional(z.string().min(1)),
+
+    /** Offline chains that move no money. For local development only. */
+    GUARD_STUB_CHAINS: z.enum(['true', 'false']).default('false'),
+    EXPIRY_SWEEP_MS: z.coerce.number().int().positive().default(30_000),
+
+    /**
+     * Whether the public listener may read the client's address from Fly-Client-IP. Only behind a
+     * proxy that sets it and drops the client's own (Fly, or the Caddy in deploy/): anywhere else a
+     * client picks a fresh one per request and is never limited.
+     */
+    TRUST_FLY_CLIENT_IP: z.enum(['true', 'false']).default('false'),
+    /**
+     * CR-019. Whether the client's address is the last X-Forwarded-For hop, the one the host's
+     * proxy (Render's) appends. Hops before it are whatever the client sent.
+     */
+    TRUST_FORWARDED_FOR: z.enum(['true', 'false']).default('false'),
+
+    /**
+     * CR-024. The daily backup's hour, and an optional S3-compatible bucket for an encrypted copy:
+     * https://<endpoint>/<bucket>[/<prefix>], path-style. The keys are secrets; the bucket needs all.
+     */
+    BACKUP_HOUR_UTC: z.coerce.number().int().min(0).max(23).default(3),
+    BACKUP_BUCKET_URL: optional(z.url({ protocol: /^https$/ })),
+    BACKUP_REGION: z.string().min(1).default('auto'),
+    BACKUP_ACCESS_KEY_ID: optional(z.string().min(1)),
+    BACKUP_SECRET_ACCESS_KEY: optional(z.string().min(1)),
+    /** 32 bytes as 64 hex digits: openssl rand -hex 32. */
+    BACKUP_ENCRYPTION_KEY: optional(
+      z.string().regex(/^[0-9a-fA-F]{64}$/, 'expected 64 hex digits'),
+    ),
+
+    /** Requests per minute. Per IP on every route, and per agent token on the agent routes. */
+    RATE_LIMIT_PER_IP: z.coerce.number().int().positive().default(120),
+    RATE_LIMIT_PER_AGENT: z.coerce.number().int().positive().default(60),
+  })
+  // A passkey is bound to an origin and an RP id, and a browser accepts the pair only when the
+  // origin is exactly scheme://host[:port] and its host is the RP id or under it. A mismatch would
+  // pass startup and then refuse every enrolment and approval.
+  .refine(
+    (c) => c.PASSKEY_ORIGIN === undefined || originMatches(c.PASSKEY_ORIGIN, c.PASSKEY_RP_ID),
+    {
+      path: ['PASSKEY_ORIGIN'],
+    },
+  )
+  // The anchor key is made when no file is given (CR-019); the chain and its RPC go together.
+  .refine((c) => (c.ANCHOR_CHAIN === undefined) === (c.ANCHOR_RPC_URL === undefined), {
+    path: ['ANCHOR_RPC_URL'],
+  })
+  // Push services refuse a sender with no contact; PUBLIC_URL serves as one.
+  .refine(
+    (c) =>
+      c.VAPID_PRIVATE_KEY_FILE === undefined ||
+      c.VAPID_SUBJECT !== undefined ||
+      c.PUBLIC_URL !== undefined,
+    { path: ['VAPID_SUBJECT'] },
+  )
+  .refine((c) => !publicAdmin(c) || c.ALLOW_PUBLIC_ADMIN === 'true', {
+    path: ['HOST'],
+    message:
+      'the admin routes would face every interface: set PUBLIC_PORT to split the listeners, ' +
+      'HOST to loopback, ADMIN_ROUTES=false, or ALLOW_PUBLIC_ADMIN=true if it is meant',
+  })
+  .refine((c) => c.TRUST_FLY_CLIENT_IP === 'false' || c.TRUST_FORWARDED_FOR === 'false', {
+    path: ['TRUST_FORWARDED_FOR'],
+    message: 'trust one proxy header, not both',
+  })
+  .superRefine((c, ctx) => {
+    const bot = {
+      BOT_URL: c.BOT_URL,
+      BOT_TOKEN: c.BOT_TOKEN,
+      BOT_WEBHOOK_SECRET: c.BOT_WEBHOOK_SECRET,
+    }
+    const missing = Object.entries(bot).filter(([, value]) => value === undefined)
+    if (missing.length > 0 && missing.length < 3) {
+      for (const [key] of missing) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [key],
+          message: 'the bot needs all three of BOT_URL, BOT_TOKEN and BOT_WEBHOOK_SECRET',
+        })
+      }
+    }
+  })
+  // A bucket never gets a plaintext copy: its upload needs the encryption key and both credentials.
+  .superRefine((c, ctx) => {
+    if (c.BACKUP_BUCKET_URL === undefined) {
+      return
+    }
+    for (const key of [
+      'BACKUP_ACCESS_KEY_ID',
+      'BACKUP_SECRET_ACCESS_KEY',
+      'BACKUP_ENCRYPTION_KEY',
+    ] as const) {
+      if (c[key] === undefined) {
+        ctx.addIssue({ code: 'custom', path: [key], message: 'BACKUP_BUCKET_URL needs it' })
+      }
+    }
+  })
+  // A passkey is bound to an address, so turning them on without one would approve nothing.
+  .refine(
+    (c) =>
+      c.PASSKEY_ABOVE === undefined ||
+      (c.PASSKEY_RP_ID !== undefined && c.PASSKEY_ORIGIN !== undefined),
+    { path: ['PASSKEY_RP_ID'] },
+  )
+
+export const configSchema = z.preprocess(defaults, settings)
+
+const LOOPBACK = /^(localhost|::1|127(\.\d{1,3}){3})$/
+
+/** One listener, beyond loopback, with the admin routes on it. */
+export function publicAdmin(c: {
+  PUBLIC_PORT?: number | undefined
+  ADMIN_ROUTES: 'true' | 'false'
+  HOST: string
+}): boolean {
+  return c.PUBLIC_PORT === undefined && c.ADMIN_ROUTES === 'true' && !LOOPBACK.test(c.HOST)
+}
+
+/** What listens where, for the start-up log: never a secret, only addresses and route groups. */
+export function listenerLayout(c: Config) {
+  const admin = c.ADMIN_ROUTES === 'true' ? ['admin'] : []
+  const bot = botSettings(c) === undefined ? [] : ['bot']
+  return c.PUBLIC_PORT === undefined
+    ? [{ address: `${c.HOST}:${c.PORT}`, routes: ['agent', 'owner', ...admin, ...bot] }]
+    : [
+        { address: `${c.PUBLIC_HOST}:${c.PUBLIC_PORT}`, routes: ['agent', 'owner'] },
+        { address: `${c.HOST}:${c.PORT}`, routes: [...admin, ...bot] },
+      ]
+}
+
+function originMatches(origin: string, rpId: string | undefined): boolean {
+  const url = new URL(origin)
+  return (
+    url.origin === origin &&
+    rpId !== undefined &&
+    (url.hostname === rpId || url.hostname.endsWith(`.${rpId}`))
+  )
+}
+
+export type Config = z.infer<typeof configSchema>
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  const parsed = configSchema.safeParse(env)
+  if (!parsed.success) {
+    // Names only. The values are secrets and this runs at startup, often into a shared log.
+    const fields = parsed.error.issues.map((issue) => issue.path.join('.')).join(', ')
+    throw new Error(`invalid configuration: ${fields}`)
+  }
+  return parsed.data
+}
+
+/** The Telegram bot's settings, when it is configured (CR-017). */
+export function botSettings(config: Config) {
+  const { BOT_URL: url, BOT_TOKEN: token, BOT_WEBHOOK_SECRET: secret } = config
+  return url === undefined || token === undefined || secret === undefined
+    ? undefined
+    : { url, token, secret }
+}

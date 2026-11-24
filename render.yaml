@@ -1,0 +1,40 @@
+# One-click DefiMind on Render (CR-019, ADR 006). The Deploy button in README.md opens this.
+# Render generates ADMIN_TOKEN and SETUP_CODE; everything else is set from the panel. The owner
+# reads SETUP_CODE once, under the service's Environment tab, to enrol the first passkey.
+services:
+  - type: web
+    name: defimind
+    runtime: docker
+    dockerfilePath: ./packages/guard-core/Dockerfile
+    dockerContext: .
+    # A disk needs a paid instance: the database and the generated keys live on it, and a free
+    # instance would lose both, and with them the day's spend, on every restart.
+    plan: starter
+    region: virginia
+    healthCheckPath: /health
+    # The service holds hot keys: it changes only when the owner deploys, never on a push to main.
+    autoDeployTrigger: off
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      # Render routes to PORT on every interface; guard-core listens on loopback unless told.
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        value: file:/data/guard.db
+      - key: SOLANA_CHAIN
+        value: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+      # One public listener: the admin API would be on the internet, so it is not served at all.
+      - key: ADMIN_ROUTES
+        value: 'false'
+      # Rate limits read the hop Render's proxy appends, never one the client sent.
+      - key: TRUST_FORWARDED_FOR
+        value: 'true'
+      - key: LOG_LEVEL
+        value: info
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: SETUP_CODE
+        generateValue: true

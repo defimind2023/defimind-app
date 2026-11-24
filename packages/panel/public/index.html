@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#0a0f1a" />
+    <title>DefiMind</title>
+    <link rel="manifest" href="/panel/manifest.webmanifest" />
+    <link rel="icon" href="/panel/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/panel/icons/icon-192.png" />
+    <link rel="stylesheet" href="/panel/app.css" />
+    <script type="module" src="/panel/app.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="top">
+        <a class="brand" href="/panel/">
+          <svg
+            class="logo"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="263 192 424 602"
+            width="17"
+            height="24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <defs>
+              <linearGradient id="dm-body" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2f8cff" />
+                <stop offset="1" stop-color="#2166e8" />
+              </linearGradient>
+              <mask id="dm-shape">
+                <ellipse cx="475" cy="558" rx="212" ry="236" fill="#fff" />
+                <rect x="585" y="192" width="102" height="380" fill="#fff" />
+                <ellipse cx="455" cy="542" rx="100" ry="123" fill="#000" />
+                <rect x="555" y="0" width="30" height="420" fill="#000" />
+                <rect x="687" y="0" width="313" height="1000" fill="#000" />
+              </mask>
+              <clipPath id="dm-low">
+                <path d="M200 748 L355 748 Q640 720 687 430 L1000 430 L1000 1000 L200 1000 Z" />
+              </clipPath>
+            </defs>
+            <g mask="url(#dm-shape)">
+              <rect width="1000" height="1000" fill="url(#dm-body)" />
+              <rect width="1000" height="1000" fill="#0c3fa6" clip-path="url(#dm-low)" />
+              <path d="M350 742 Q636 718 687 424 L687 478 Q648 748 372 764 Z" fill="#25e4ff" />
+            </g>
+          </svg>
+          DefiMind</a
+        >
+        <span id="network" hidden></span>
+      </div>
+      <nav>
+        <a href="/panel/">Overview</a>
+        <a href="/panel/agents">Agents</a>
+        <a href="/panel/deposit">Deposit</a>
+        <a href="/panel/portfolio">Portfolio</a>
+        <a href="/panel/report">Report</a>
+        <a href="/panel/executions">Executions</a>
+        <a href="/panel/doctor">Doctor</a>
+        <a href="/panel/settings">Settings</a>
+        <a class="stop" href="/panel/kill">Stop</a>
+      </nav>
+    </header>
+    <p id="status" role="status" aria-live="polite"></p>
+    <main id="app"></main>
+  </body>
+</html>

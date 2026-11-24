@@ -1,0 +1,26 @@
+{
+  "name": "@defimind/panel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The owner panel: a PWA that approves with passkeys, served by guard-core at /panel.",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsx build.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.sw.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:web": "vitest run --config vitest.web.config.ts"
+  },
+  "dependencies": {
+    "@defimind/shared": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "jsqr": "1.4.0",
+    "playwright": "1.63.0",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,18 @@
+export { evaluate } from './domain/policy.js'
+export type { Evaluation } from './domain/policy.js'
+export { parseAmount, toAmount } from './domain/amount.js'
+export { chooseAccept, requirementsChanged } from './domain/x402.js'
+export type { AcceptChoice } from './domain/x402.js'
+
+// In-process surface for /e2e: the server with an injected clock, its database and a stub chain.
+export { buildServer } from './http/server.js'
+export type { Server, ServerDeps } from './http/server.js'
+export { migrateDb, openDb } from './db/client.js'
+export type { Db } from './db/client.js'
+export { createAgent, revokeAgent } from './db/agents.js'
+export type { Revocation } from './db/agents.js'
+export { StubChain } from './adapters/stub.js'
+export { httpBotNotifier } from './adapters/bot.js'
+export type { BotNotifier } from './adapters/bot.js'
+export { loadConfig } from './config.js'
+export type { Config } from './config.js'

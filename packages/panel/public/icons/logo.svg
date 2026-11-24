@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <defs>
+    <linearGradient id="dm-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f8cff"/>
+      <stop offset="1" stop-color="#2166e8"/>
+    </linearGradient>
+    <mask id="dm-shape">
+      <ellipse cx="475" cy="558" rx="212" ry="236" fill="#fff"/>
+      <rect x="585" y="192" width="102" height="380" fill="#fff"/>
+      <ellipse cx="455" cy="542" rx="100" ry="123" fill="#000"/>
+      <rect x="555" y="0" width="30" height="420" fill="#000"/>
+      <rect x="687" y="0" width="313" height="1000" fill="#000"/>
+    </mask>
+    <clipPath id="dm-low">
+      <path d="M200 748 L355 748 Q640 720 687 430 L1000 430 L1000 1000 L200 1000 Z"/>
+    </clipPath>
+  </defs>
+  <g mask="url(#dm-shape)">
+    <rect width="1000" height="1000" fill="url(#dm-body)"/>
+    <rect width="1000" height="1000" fill="#0c3fa6" clip-path="url(#dm-low)"/>
+    <path d="M350 742 Q636 718 687 424 L687 478 Q648 748 372 764 Z" fill="#25e4ff"/>
+  </g>
+</svg>

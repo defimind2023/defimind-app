@@ -1,0 +1,881 @@
+/*
+ * The "ink" look (PANEL-18, approved 2026-11-23): deep blue-black surfaces, one solid blue for the
+ * action, hairlines, small radii. No gradient, glow, blur or pill, except inside the logo itself.
+ * System fonts only: the CSP has no font-src.
+ */
+:root {
+  color-scheme: dark;
+  --bg: #0a0f1a;
+  --surface: #0e1524;
+  --raise: #131c2e;
+  --line: #1d2739;
+  --line2: #2a3650;
+  --text: #e7ebf1;
+  --muted: #8792a5;
+  --faint: #5d6879;
+  --blue: #2c5ac8;
+  --blue-hi: #3a6ad6;
+  --blue-ink: #9db7f0;
+  --ok: #3fb68b;
+  --warn: #d9a441;
+  --stop: #e5605c;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --ease: 120ms ease;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--blue-ink);
+  text-underline-offset: 3px;
+}
+
+/* Solid, with a hairline: nothing scrolling under it shows through. */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: env(safe-area-inset-top);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Before sign-in, only the logo: no tabs to screens that need a session. */
+body[data-screen='login'] header,
+body[data-screen='enrol'] header,
+body[data-screen='setup'] header {
+  border-bottom: 0;
+}
+
+body[data-screen='login'] nav,
+body[data-screen='enrol'] nav,
+body[data-screen='setup'] nav,
+body[data-screen='login'] #network,
+body[data-screen='enrol'] #network,
+body[data-screen='setup'] #network {
+  display: none;
+}
+
+header .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+/* The DefiMind logo, as it is: its own blue and cyan are the one gradient the panel keeps. */
+.brand .logo {
+  flex: none;
+  width: auto;
+  height: 24px;
+}
+
+.network {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.network::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.network.ok::before {
+  background: var(--ok);
+}
+
+.network.warn::before {
+  background: var(--warn);
+}
+
+/* Plain-text tabs; the current one is underlined. One row that scrolls on a phone. */
+nav {
+  display: flex;
+  padding: 0 0 0 max(8px, env(safe-area-inset-left));
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  font-size: 0.9rem;
+}
+
+nav::-webkit-scrollbar {
+  display: none;
+}
+
+nav a {
+  flex: none;
+  padding: 10px 6px 11px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    color var(--ease),
+    opacity var(--ease);
+}
+
+nav a.cut {
+  opacity: 0;
+}
+
+nav a:hover,
+nav a:focus-visible {
+  color: var(--text);
+}
+
+/* Pinned at the row's right end on a phone, on a solid ground: the links scroll under it. */
+nav a.stop {
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  padding-left: 10px;
+  padding-right: max(12px, env(safe-area-inset-right));
+  border-left: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--stop);
+}
+
+body[data-screen='overview'] nav a[href='/panel/'],
+body[data-screen='agents'] nav a[href='/panel/agents'],
+body[data-screen='agent'] nav a[href='/panel/agents'],
+body[data-screen='deposit'] nav a[href='/panel/deposit'],
+body[data-screen='portfolio'] nav a[href='/panel/portfolio'],
+body[data-screen='report'] nav a[href='/panel/report'],
+body[data-screen='executions'] nav a[href='/panel/executions'],
+body[data-screen='doctor'] nav a[href='/panel/doctor'],
+body[data-screen='settings'] nav a[href='/panel/settings'],
+body[data-screen='passkeys'] nav a[href='/panel/settings'] {
+  color: var(--text);
+  border-bottom-color: var(--blue-ink);
+}
+
+body[data-screen='kill'] nav a.stop {
+  border-bottom-color: var(--stop);
+}
+
+@media (min-width: 760px) {
+  header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  }
+
+  header .top {
+    padding: 0;
+    flex: none;
+    gap: 16px;
+  }
+
+  nav {
+    flex: 1;
+    padding: 0;
+  }
+
+  nav a {
+    padding: 16px 10px 15px;
+  }
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 22px max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+main[aria-busy='true'] {
+  opacity: 0.6;
+  transition: opacity var(--ease);
+}
+
+h1 {
+  margin: 4px 0 16px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h3 {
+  margin: 16px 0 8px;
+  font-size: 0.93rem;
+  font-weight: 600;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+#status {
+  max-width: 720px;
+  margin: 12px auto 0;
+  padding: 0 16px;
+  min-height: 1.5em;
+  font-size: 0.93rem;
+}
+
+#status:empty {
+  display: none;
+}
+
+#status[data-tone='done'] {
+  color: var(--ok);
+}
+
+#status[data-tone='stop'] {
+  color: var(--stop);
+}
+
+.card {
+  position: relative;
+  margin-bottom: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+/* A request that waits on the owner: a thin amber rail on its left. */
+.card.req,
+body[data-screen='approval'] main > .card,
+body[data-screen='mandate'] main > .card {
+  border-left: 2px solid var(--warn);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: color var(--ease);
+}
+
+h2 + .item,
+.card > .item:first-child {
+  border-top: 0;
+}
+
+a.item {
+  position: relative;
+  padding-right: 24px;
+}
+
+/* Drawn, not typed: generated text would join the link's accessible name. */
+a.item::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid var(--faint);
+  border-right: 1.5px solid var(--faint);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+a.item:hover strong,
+a.item:focus-visible strong {
+  color: var(--blue-ink);
+}
+
+.item strong {
+  font-weight: 600;
+}
+
+dl {
+  margin: 0 0 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(84px, 30%) 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* State: a 7px square in the state's colour, then its text. No pill. */
+.badge,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.badge {
+  margin-left: 10px;
+}
+
+.badge::before,
+.pill::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: currentcolor;
+}
+
+.badge.shadow,
+.pill.wait {
+  color: var(--warn);
+}
+
+.badge.stop {
+  color: var(--stop);
+}
+
+.badge.ok,
+.pill.ok {
+  color: var(--ok);
+}
+
+h2.pill {
+  margin-bottom: 12px;
+  font-size: 0.93rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Chain names are plain text. */
+.pill.chain {
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.pill.chain::before {
+  content: none;
+}
+
+.flag {
+  color: var(--warn);
+}
+
+p.flag {
+  padding: 10px 12px;
+  border: 1px solid var(--line2);
+  border-left: 2px solid var(--warn);
+  border-radius: 5px;
+  background: var(--raise);
+}
+
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  margin: 4px 8px 4px 0;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.93rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--ease),
+    border-color var(--ease),
+    color var(--ease);
+}
+
+button:hover,
+.button:hover {
+  background: var(--raise);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.primary {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.primary:hover {
+  border-color: var(--blue-hi);
+  background: var(--blue-hi);
+}
+
+.danger {
+  color: var(--stop);
+}
+
+/* Paired actions: the primary on the right, and wider. */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 8px;
+}
+
+.actions button {
+  margin: 0;
+  width: 100%;
+}
+
+.kill,
+button.kill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--stop);
+  font-size: 0.93rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* On its own screen, Stop is the one action: solid. */
+body[data-screen='kill'] button.kill {
+  border-color: var(--stop);
+  background: var(--stop);
+  color: #fff;
+}
+
+label {
+  display: block;
+  margin: 14px 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+label.check {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+  font-size: 0.93rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+input:not([type='checkbox']),
+textarea,
+select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: var(--raise);
+  color: var(--text);
+  font: inherit;
+  transition: border-color var(--ease);
+}
+
+input:not([type='checkbox']):focus,
+textarea:focus,
+select:focus {
+  border-color: var(--blue-ink);
+}
+
+input::placeholder {
+  color: var(--faint);
+}
+
+input[type='checkbox'] {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--blue);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue-ink);
+  outline-offset: 2px;
+}
+
+code.token,
+pre {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--raise);
+  color: #c6cfdd;
+  font-family: var(--mono);
+  font-size: 0.83rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.check-ok strong {
+  color: var(--ok);
+}
+
+.check-warn strong {
+  color: var(--warn);
+}
+
+.check-fail strong {
+  color: var(--stop);
+}
+
+.shadow-total {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.badge-line {
+  font-weight: 600;
+}
+
+.badge-line.ok {
+  color: var(--ok);
+}
+
+.badge-line.stop {
+  color: var(--stop);
+}
+
+/* Addresses: monospace, a shade quieter, and whole. */
+.mono {
+  color: #c6cfdd;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  word-break: break-all;
+}
+
+/* Transaction ids and hashes are one long word: break them anywhere rather than widen the page. */
+p code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: #c6cfdd;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.item button {
+  align-self: flex-start;
+}
+
+/* Figures line up. */
+body[data-screen='approval'] h1,
+body[data-screen='mandate'] h1,
+.summary,
+.shadow-total,
+.date {
+  font-variant-numeric: tabular-nums;
+}
+
+/* An approval leads with its amount. */
+body[data-screen='approval'] h1,
+body[data-screen='mandate'] h1 {
+  margin: 8px 0 18px;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+/* The overview's header: title and date, today's spend with its meter, then the counts. */
+.title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.title h1 {
+  margin: 0;
+}
+
+.date {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.summary {
+  padding: 0;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spend {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.big {
+  margin: 6px 0 2px;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.big small {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.meter {
+  height: 3px;
+  margin-top: 14px;
+  background: var(--line);
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  background: var(--blue-ink);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+}
+
+.split > div {
+  padding: 12px 16px;
+  border-left: 1px solid var(--line);
+  min-width: 0;
+}
+
+.split > div:first-child {
+  border-left: 0;
+}
+
+.split .value {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+details summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* CR-019: the deposit QR code stays square and readable on a phone, white margin included. */
+svg.qr {
+  display: block;
+  width: min(240px, 100%);
+  height: auto;
+  margin: 12px 0;
+  border-radius: 5px;
+}
+
+progress {
+  width: 100%;
+  height: 3px;
+  margin-bottom: 20px;
+  border: 0;
+  background: var(--line);
+  accent-color: var(--blue-ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+progress::-webkit-progress-bar {
+  background: var(--line);
+}
+
+progress::-webkit-progress-value {
+  background: var(--blue-ink);
+}
+
+progress::-moz-progress-bar {
+  background: var(--blue-ink);
+}
+
+.why {
+  color: var(--muted);
+}
+
+ol.steps {
+  margin: 12px 0 0;
+  padding-left: 1.4em;
+}
+
+ol.steps li {
+  padding: 6px 0;
+}
+
+ol.steps li.done a::after {
+  content: ' ✓';
+  color: var(--ok);
+}
+
+ol.steps a {
+  color: inherit;
+}
+
+ol.steps a[aria-current='step'] {
+  color: var(--blue-ink);
+  font-weight: 600;
+}
+
+/* The entry screens before sign-in: one centred column. */
+body[data-screen='login'] main,
+body[data-screen='enrol'] main,
+body[data-screen='setup'] main {
+  max-width: 440px;
+  padding-top: 32px;
+}
+
+body[data-screen='login'] h1,
+body[data-screen='setup'] h1 {
+  font-size: 24px;
+}
+
+body[data-screen='login'] .primary,
+body[data-screen='enrol'] .primary {
+  width: 100%;
+  margin: 12px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
+
+/* CR-022: one block per agent wallet inside the Own wallet card. */
+.wallet {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* CR-025: a token is its mint-drawn mark, its claimed name and its whole mint. */
+.token {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.token > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.token select {
+  min-width: 0;
+  flex: 1;
+}
+
+.identicon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: var(--raise);
+}
+
+.risk h3 {
+  margin: 14px 0 6px;
+}
+
+.facts {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.facts li + li {
+  margin-top: 4px;
+}

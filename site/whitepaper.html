@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>DefiMind Whitepaper</title>
+    <meta
+      name="description"
+      content="DefiMind whitepaper: the security layer between AI agents and their wallets. Policy, simulation, human approval and an onchain daily cap on Solana and Robinhood Chain."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <style>
+      :root {
+        --bg: #0a0f1a;
+        --surface: #0e1524;
+        --raise: #131c2e;
+        --line: #1d2739;
+        --line2: #2a3650;
+        --text: #e7ebf1;
+        --muted: #8792a5;
+        --faint: #5d6879;
+        --blue-ink: #9db7f0;
+        --ok: #3fb68b;
+        --warn: #d9a441;
+        --stop: #e5605c;
+        --sans:
+          -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        --gut-l: max(20px, env(safe-area-inset-left, 0px));
+        --gut-r: max(20px, env(safe-area-inset-right, 0px));
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0 0 auto;
+        height: env(safe-area-inset-top, 0px);
+        z-index: 60;
+        background: var(--bg);
+      }
+      a {
+        color: var(--blue-ink);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      :focus-visible {
+        outline: 2px solid var(--blue-ink);
+        outline-offset: 3px;
+        border-radius: 5px;
+      }
+      .wrap {
+        max-width: 820px;
+        margin: 0 auto;
+        padding-left: var(--gut-l);
+        padding-right: var(--gut-r);
+      }
+
+      /* Nav */
+      .nav {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav .wrap {
+        max-width: 1080px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+        gap: 20px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 17px;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+      /* The company logo (ink brief): its own colours, never recoloured or glowing. */
+      .logo {
+        flex: none;
+        width: 24px;
+        height: 24px;
+      }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .back {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .back:hover {
+        color: var(--text);
+        text-decoration: none;
+      }
+      .lang {
+        display: inline-flex;
+        border: 1px solid var(--line2);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .lang button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 7px 12px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+      }
+      .lang button[aria-pressed='true'] {
+        background: var(--text);
+        color: var(--bg);
+      }
+      .lang button:hover:not([aria-pressed='true']) {
+        color: var(--text);
+      }
+      @media (max-width: 620px) {
+        .back {
+          display: none;
+        }
+      }
+
+      /* Hero */
+      .head {
+        padding-block: clamp(48px, 8vw, 92px) 20px;
+      }
+      .kicker {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 {
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: clamp(36px, 6vw, 60px);
+        line-height: 1.06;
+        letter-spacing: -0.03em;
+        margin: 20px 0 16px;
+        text-wrap: balance;
+      }
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 20px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--faint);
+      }
+      .meta-row b {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .live-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--ok);
+      }
+      .live-dot::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: var(--ok);
+      }
+
+      /* Article */
+      article {
+        padding-bottom: 100px;
+      }
+      article[hidden] {
+        display: none;
+      }
+      .abstract {
+        margin: 34px 0 10px;
+        padding: 24px 26px;
+        border: 1px solid var(--line);
+        border-left: 2px solid var(--blue-ink);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 16.5px;
+      }
+      .abstract b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      h2 {
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: clamp(24px, 3.4vw, 32px);
+        letter-spacing: -0.02em;
+        margin: 52px 0 6px;
+        scroll-margin-top: 90px;
+      }
+      h2 .n {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--blue-ink);
+        margin-right: 12px;
+        font-weight: 500;
+      }
+      h3 {
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 18px;
+        margin: 26px 0 4px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin: 12px 0;
+        color: #c9d0dc;
+      }
+      .lead {
+        color: var(--muted);
+      }
+      ul.plain {
+        margin: 12px 0;
+        padding-left: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+      ul.plain li {
+        position: relative;
+        padding-left: 22px;
+        color: #c9d0dc;
+      }
+      ul.plain li::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 11px;
+        width: 6px;
+        height: 6px;
+        border-radius: 1px;
+        background: var(--blue-ink);
+      }
+      strong {
+        color: var(--text);
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+        font-size: 0.9em;
+        color: var(--blue-ink);
+      }
+
+      .flow {
+        display: grid;
+        gap: 0;
+        margin: 20px 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .flow-step {
+        padding: 16px 20px;
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+      }
+      .flow-step:first-child {
+        border-top: 0;
+      }
+      .flow-step b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .flow-step span {
+        color: var(--muted);
+      }
+      .flow-step .mono {
+        color: var(--ok);
+        font-size: 12px;
+      }
+
+      .formula {
+        margin: 20px 0;
+        padding: 22px 24px;
+        border-radius: 6px;
+        background: var(--raise);
+        border: 1px solid var(--line2);
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: clamp(18px, 2.6vw, 24px);
+        letter-spacing: -0.02em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 18px 0;
+        font-size: 14px;
+      }
+      .tscroll {
+        overflow-x: auto;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--faint);
+        font-weight: 400;
+      }
+      td code {
+        color: var(--stop);
+        white-space: nowrap;
+      }
+      td .d {
+        color: var(--muted);
+      }
+
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin: 18px 0;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 20px 22px;
+        background: var(--surface);
+      }
+      .card h3 {
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .tag {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--line2);
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .tag.live {
+        color: var(--ok);
+      }
+      .card dl {
+        margin: 10px 0 0;
+        display: grid;
+        gap: 8px;
+      }
+      .card dl div {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 12px;
+        font-size: 13.5px;
+      }
+      .card dt {
+        color: var(--faint);
+      }
+      .card dd {
+        margin: 0;
+        color: #c9d0dc;
+        overflow-wrap: anywhere;
+      }
+      @media (max-width: 620px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+        .card dl div {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+      }
+
+      .note {
+        margin: 30px 0;
+        padding: 20px 22px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        border-left: 2px solid var(--warn);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+      .note b {
+        color: var(--warn);
+        font-weight: 600;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 40px 56px;
+        color: var(--faint);
+        font-family: var(--mono);
+        font-size: 12.5px;
+      }
+      footer .wrap {
+        max-width: 1080px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      footer a {
+        color: var(--muted);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <linearGradient id="dm-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2f8cff" />
+          <stop offset="1" stop-color="#2166e8" />
+        </linearGradient>
+        <mask id="dm-shape">
+          <ellipse cx="475" cy="558" rx="212" ry="236" fill="#fff" />
+          <rect x="585" y="192" width="102" height="380" fill="#fff" />
+          <ellipse cx="455" cy="542" rx="100" ry="123" fill="#000" />
+          <rect x="555" y="0" width="30" height="420" fill="#000" />
+          <rect x="687" y="0" width="313" height="1000" fill="#000" />
+        </mask>
+        <clipPath id="dm-low">
+          <path d="M200 748 L355 748 Q640 720 687 430 L1000 430 L1000 1000 L200 1000 Z" />
+        </clipPath>
+      </defs>
+      <symbol id="dm-logo" viewBox="165 183 620 620">
+        <g mask="url(#dm-shape)">
+          <rect width="1000" height="1000" fill="url(#dm-body)" />
+          <rect width="1000" height="1000" fill="#0c3fa6" clip-path="url(#dm-low)" />
+          <path d="M350 742 Q636 718 687 424 L687 478 Q648 748 372 764 Z" fill="#25e4ff" />
+        </g>
+      </symbol>
+    </svg>
+    <header class="nav">
+      <div class="wrap">
+        <a class="brand" href="index.html">
+          <svg class="logo" aria-hidden="true"><use href="#dm-logo" /></svg>
+          DefiMind
+        </a>
+        <div class="nav-right">
+          <a class="back" href="index.html">← Back to site</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="head">
+      <div class="wrap">
+        <span class="kicker" data-t="kicker">Whitepaper</span>
+        <h1 data-t="title">The security layer every agent needs.</h1>
+        <div class="meta-row">
+          <span><b>DefiMind</b></span>
+          <span data-t="version">Public beta</span>
+          <span data-t="date">November 2026</span>
+          <span class="live-dot" data-t="status">Live on mainnet</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================ ENGLISH ============================ -->
+    <article lang="en" data-article="en">
+      <div class="wrap">
+        <p class="abstract">
+          <b>AI agents are becoming economic actors. DefiMind is what lets them spend safely.</b>
+          An agent can only pay through DefiMind. Every payment is checked against rules the owner
+          sets, test-run before it is signed, and then auto-approved, sent to the owner for a
+          passkey approval, or rejected. The agent never holds a key. Funds stay in the owner's own
+          vault, and the agent spends from a small wallet refilled under a daily limit that the
+          blockchain itself enforces. The most a day can cost is fixed in advance, even if our
+          software fails.
+        </p>
+
+        <h2><span class="n">01</span>Why now</h2>
+        <p>
+          Agents have learned to reason, write code and use tools. The next step is obvious: they
+          will pay for what they use. Data, compute, APIs, services, each other. Two open standards
+          are making that real today. <strong>x402</strong> lets any API charge per request, in
+          stablecoins, with no account and no card. <strong>MCP</strong> gives every agent one
+          standard way to plug into tools.
+        </p>
+        <p>
+          What is missing is not intelligence. It is trust. Wallets were built for people who read
+          what they sign. An agent signs whatever it is told to, at machine speed. The agent economy
+          needs a layer that says yes to the right payment and no to everything else, and that keeps
+          saying no even when something goes wrong. That layer is DefiMind.
+        </p>
+
+        <h2><span class="n">02</span>The problem</h2>
+        <p>
+          The moment an agent can spend, a single bad instruction, a prompt injection, a bug or a
+          leaked key can drain a wallet in seconds. Today the choice is stark: give the agent a
+          private key and risk everything, or keep the keys and keep the agent useless.
+        </p>
+        <p class="lead">
+          DefiMind removes that trade-off. The agent gets spending power. You keep the keys and a
+          hard ceiling on what can go wrong.
+        </p>
+
+        <h2><span class="n">03</span>How it works</h2>
+        <p>Every payment takes the same four steps, in the same order, on every chain.</p>
+        <ul class="plain">
+          <li>
+            <strong>Request.</strong> The agent asks DefiMind to pay. It holds no key and no money;
+            asking is all it can do.
+          </li>
+          <li>
+            <strong>Policy.</strong> The payment is checked against the owner's rules: limits,
+            chains, tokens, recipients and websites.
+          </li>
+          <li>
+            <strong>Test run.</strong> The exact transaction is simulated against the real chain. If
+            it would do anything the request did not describe, it never runs.
+          </li>
+          <li>
+            <strong>Decide.</strong> Under the owner's threshold it is paid. At or above it, it
+            waits for the owner's passkey. Anything that breaks a rule is rejected with a named
+            reason.
+          </li>
+        </ul>
+
+        <h2><span class="n">04</span>Architecture</h2>
+        <p>Money flows through four layers. Each one narrows what the one above it can do.</p>
+        <div class="flow">
+          <div class="flow-step">
+            <b>Owner vault</b> — holds the funds.
+            <span>Squads v4 on Solana, Safe on EVM chains. Only the owner controls it.</span>
+          </div>
+          <div class="flow-step">
+            <b>Onchain spend limit</b> —
+            <span>refills the spending wallet, never above the daily cap.</span>
+            <span class="mono">enforced by the chain, not by us</span>
+          </div>
+          <div class="flow-step">
+            <b>Spending wallet</b> —
+            <span
+              >a small balance the agent spends from. Its key lives only inside the guard service,
+              never logged, never returned.</span
+            >
+          </div>
+          <div class="flow-step">
+            <b>Payments</b> —
+            <span
+              >x402 pay-per-use APIs and transfers, only to recipients and websites the owner
+              allowed.</span
+            >
+          </div>
+        </div>
+        <p>
+          The agent talks to DefiMind over MCP, so one connection works with any agent on any
+          platform. It gets four tools: <code>paid_fetch</code>, <code>transfer</code>,
+          <code>get_budget</code> and <code>check_intent</code>. Each chain sits behind one adapter,
+          so every chain gets the same policy, the same test run and the same kill switch. Adding a
+          chain means adding an adapter, not rebuilding the product.
+        </p>
+
+        <h2><span class="n">05</span>Onchain guarantees</h2>
+        <p>
+          DefiMind deploys no smart contract of its own. The daily limit uses building blocks that
+          already secure large amounts onchain and are independently audited by their own makers:
+          the Squads Spending Limit on Solana, and the Safe Allowance Module on EVM chains, reset
+          every 24 hours. The vault refills the spending wallet up to the daily cap and no more, and
+          the chain enforces that whatever our software does.
+        </p>
+        <div class="formula">Maximum loss per day = daily cap + spending wallet balance.</div>
+        <p>
+          This holds even if the guard itself has a bug or is fully compromised. The cap starts
+          deliberately low and rises only after weeks without incident. The owner can remove the
+          limit entirely at any time with one signature.
+        </p>
+
+        <h2><span class="n">06</span>The policy engine</h2>
+        <p>
+          A new agent starts at deny-all and can spend nothing until the owner allows it. From
+          there, the owner decides exactly how much freedom it gets.
+        </p>
+        <ul class="plain">
+          <li>
+            <strong>Per-payment and daily limits</strong> — a ceiling on each payment and on the
+            day's total, beneath the onchain cap.
+          </li>
+          <li>
+            <strong>Allowlists</strong> — which chains, tokens, recipients and websites are
+            permitted. Empty means deny.
+          </li>
+          <li>
+            <strong>Approval threshold</strong> — any payment at or above it waits for the owner.
+          </li>
+          <li>
+            <strong>Task budgets</strong> — a budget for one job, for a set time, that the agent
+            cannot exceed.
+          </li>
+          <li><strong>Pause</strong> — one switch stops an agent, or every agent at once.</li>
+        </ul>
+        <p>
+          What the agent says, its reason, the URL, an API's reply, is shown to the owner but never
+          used to decide. Amounts are exact integers end to end: a value that would need rounding is
+          refused, never rounded.
+        </p>
+
+        <h2><span class="n">07</span>Simulation and threat detection</h2>
+        <p>
+          A payment that passes policy is test-run against the real chain before signing. The guard
+          reads the exact transaction, sees what it would really do, and refuses anything that
+          differs from what was asked, with a named reject code written to the audit log.
+        </p>
+        <div class="tscroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Scope</th>
+                <th>Reject code</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">All chains</td>
+                <td><code>PER_TX_EXCEEDED</code> · <code>DAILY_EXCEEDED</code></td>
+                <td class="d">Over a limit you set.</td>
+              </tr>
+              <tr>
+                <td class="d">All chains</td>
+                <td><code>RECIPIENT_NOT_ALLOWED</code> · <code>DOMAIN_NOT_ALLOWED</code></td>
+                <td class="d">A destination you did not approve.</td>
+              </tr>
+              <tr>
+                <td class="d">All chains</td>
+                <td><code>SIM_UNEXPECTED_EFFECT</code></td>
+                <td class="d">The test run shows an effect the request never described.</td>
+              </tr>
+              <tr>
+                <td class="d">Solana</td>
+                <td><code>DELEGATE_DETECTED</code> · <code>AUTHORITY_CHANGE_DETECTED</code></td>
+                <td class="d">A hidden permission grab or an account takeover.</td>
+              </tr>
+              <tr>
+                <td class="d">EVM</td>
+                <td><code>APPROVAL_DETECTED</code> · <code>PERMIT_DETECTED</code></td>
+                <td class="d">
+                  A hidden token approval or a signature that would allow later withdrawals.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="lead">
+          Twenty reject codes in all, split into a shared core and per-chain sets. Default deny: any
+          doubt is a rejection.
+        </p>
+
+        <h2><span class="n">08</span>The owner stays in charge</h2>
+        <p>
+          Payments at or above the owner's threshold wait in the DefiMind app, with a push to the
+          phone and a plain summary of what the payment will do. The owner approves with a passkey,
+          their face or fingerprint, or rejects. An approval pays once, for exactly that chain,
+          token, amount, recipient and website, and expires after ten minutes if nobody answers.
+          Nothing is ever paid by default.
+        </p>
+        <p>
+          One button, <strong>Stop everything</strong>, pauses every agent at once and prepares, for
+          each chain, the transaction that sets the spending limit to zero. The owner signs it and
+          the vault is sealed. The kill has been rehearsed on mainnet.
+        </p>
+
+        <h2><span class="n">09</span>Chains and assets</h2>
+        <div class="cols">
+          <div class="card">
+            <h3>Solana <span class="tag live">Live</span></h3>
+            <dl>
+              <div>
+                <dt>Vault</dt>
+                <dd>Squads v4</dd>
+              </div>
+              <div>
+                <dt>Spend limit</dt>
+                <dd>Squads Spending Limit</dd>
+              </div>
+              <div>
+                <dt>Asset</dt>
+                <dd>USDC</dd>
+              </div>
+              <div>
+                <dt>Network</dt>
+                <dd>mainnet-beta</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="card">
+            <h3>Robinhood Chain <span class="tag live">Live</span></h3>
+            <dl>
+              <div>
+                <dt>Vault</dt>
+                <dd>Safe</dd>
+              </div>
+              <div>
+                <dt>Spend limit</dt>
+                <dd>Safe Allowance Module</dd>
+              </div>
+              <div>
+                <dt>Asset</dt>
+                <dd>USDG (Paxos)</dd>
+              </div>
+              <div>
+                <dt>Network</dt>
+                <dd>mainnet · eip155:4663</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+        <p>
+          <strong>Base is next.</strong> Every chain uses that chain's dollar, a proven vault and
+          the same policy, test run and kill switch.
+        </p>
+
+        <h2><span class="n">10</span>Built for the whole market</h2>
+        <ul class="plain">
+          <li>
+            <strong>For builders.</strong> Give your agent a wallet without giving it your keys. One
+            MCP connection, four tools, and every payment arrives already checked, simulated and
+            within budget.
+          </li>
+          <li>
+            <strong>For users.</strong> Let an agent work for you around the clock, knowing the
+            worst day is fixed in advance and every big payment waits for your face or fingerprint.
+          </li>
+          <li>
+            <strong>For the ecosystem.</strong> Every API, protocol and service that wants agents as
+            customers needs agents that can pay safely. DefiMind is the guardrail that turns agent
+            spending from a risk into a feature, on every chain it reaches.
+          </li>
+        </ul>
+        <p class="lead">
+          As agents move from talking to transacting, the question every owner asks is the same:
+          what stops it from spending what it should not? DefiMind is built to be that answer.
+        </p>
+
+        <h2><span class="n">11</span>Where we are and what comes next</h2>
+        <ul class="plain">
+          <li>
+            <strong>Done.</strong> The policy engine, simulation, passkey approvals, the kill switch
+            and the DefiMind app. The onchain cap proven live with real money, and the kill
+            rehearsed on mainnet.
+          </li>
+          <li>
+            <strong>Live now.</strong> Solana and Robinhood Chain mainnet, with a deliberately low
+            daily cap per chain.
+          </li>
+          <li>
+            <strong>Next.</strong> Base mainnet, higher caps after clean weeks of operation, a
+            public bug bounty and developer tools anyone can install in one step.
+          </li>
+        </ul>
+        <div class="note">
+          <b>Security posture.</b> DefiMind is in public beta and has had no external audit of its
+          own code. It writes no smart contract of its own: the onchain limit is enforced by
+          primitives from Squads and Safe, independently audited by their makers. The guard defaults
+          to deny and the worst case is bounded onchain. Use a cap you are comfortable losing.
+        </div>
+        <p class="lead">Spending power for your agent. Never your keys.</p>
+      </div>
+    </article>
+
+    <footer>
+      <div class="wrap">
+        <span data-t="foot"
+          >© 2026 DefiMind · The security layer between AI agents and their wallets.</span
+        >
+        <a href="index.html" data-t="footback">← Back to site</a>
+      </div>
+    </footer>
+  </body>
+</html>

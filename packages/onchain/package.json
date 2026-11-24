@@ -1,0 +1,65 @@
+{
+  "name": "@defimind/onchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChainAdapter for Solana (Squads v4) and Base (Safe Allowance Module).",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sign-page": "./web/page.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json",
+    "create-multisig": "tsx --env-file=.env src/scripts/create-multisig.ts",
+    "add-spending-limit": "tsx --env-file=.env src/scripts/add-spending-limit.ts",
+    "fund-vault": "tsx --env-file=.env src/scripts/fund-vault.ts",
+    "balances": "tsx --env-file=.env src/scripts/balances.ts",
+    "status": "tsx --env-file=.env src/scripts/status.ts",
+    "top-up": "tsx --env-file=.env src/scripts/top-up.ts",
+    "kill": "tsx --env-file=.env src/scripts/kill.ts",
+    "create-safe": "tsx --env-file=.env src/scripts/create-safe.ts",
+    "enable-allowance": "tsx --env-file=.env src/scripts/enable-allowance.ts",
+    "status:base": "tsx --env-file=.env src/scripts/base-status.ts",
+    "kill:base": "tsx --env-file=.env src/scripts/base-kill.ts",
+    "test:fork": "forge test -vvv",
+    "check:simulate": "tsx src/scripts/check-simulate.ts",
+    "build:web": "tsx web/build.ts",
+    "test:web": "vitest run --config web/vitest.config.ts",
+    "status:robinhood": "tsx --env-file=.env src/scripts/robinhood-status.ts",
+    "check:squads": "tsx src/scripts/check-squads.ts",
+    "record:swap": "NODE_USE_ENV_PROXY=1 tsx src/scripts/record-swap.ts"
+  },
+  "dependencies": {
+    "@defimind/shared": "workspace:*",
+    "@ledgerhq/hw-app-eth": "^7.12.0",
+    "@ledgerhq/hw-app-solana": "^7.13.0",
+    "@ledgerhq/hw-transport": "^6.36.1",
+    "@safe-global/protocol-kit": "^8.0.11",
+    "@solana/kit": "^8.6.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
+    "@sqds/multisig": "^2.1.4",
+    "@x402/core": "^2.29.0",
+    "@x402/evm": "^2.29.0",
+    "@x402/svm": "^2.29.0",
+    "viem": "^2.57.16",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "bs58": "^6.0.0",
+    "buffer": "6.0.3",
+    "esbuild": "0.25.12",
+    "litesvm": "1.6.1",
+    "playwright": "1.63.0",
+    "tsx": "^4.23.15"
+  },
+  "optionalDependencies": {
+    "@ledgerhq/hw-transport-node-hid": "^6.33.5"
+  }
+}

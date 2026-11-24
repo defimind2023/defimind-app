@@ -1,0 +1,2898 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>DefiMind</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <meta
+      name="description"
+      content="DefiMind is the security layer between AI agents and their wallets. Policy, simulation, passkey approvals in your own panel and an onchain daily cap, on Solana and Robinhood Chain, with Base next."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <style>
+      /* The ink look (SITE-7): navy surfaces, 1px hairlines, one solid blue for actions, no gradients or glows. */
+      :root {
+        --bg: #0a0f1a;
+        --surface: #0e1524;
+        --raise: #131c2e;
+        --line: #1d2739;
+        --line2: #2a3650;
+        --text: #e7ebf1;
+        --muted: #8792a5;
+        --faint: #5d6879;
+        --blue: #2c5ac8;
+        --blue-hi: #3a6ad6;
+        --blue-ink: #9db7f0;
+        --ok: #3fb68b;
+        --warn: #d9a441;
+        --stop: #e5605c;
+        --sans:
+          -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        --wrap: 1200px;
+        --gut-l: max(20px, env(safe-area-inset-left, 0px));
+        --gut-r: max(20px, env(safe-area-inset-right, 0px));
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0 0 auto;
+        height: env(safe-area-inset-top, 0px);
+        z-index: 60;
+        background: var(--bg);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      :focus-visible {
+        outline: 2px solid var(--blue-ink);
+        outline-offset: 3px;
+        border-radius: 5px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--sans);
+        margin: 0;
+        text-wrap: balance;
+        letter-spacing: -0.02em;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+      }
+      code,
+      pre,
+      .mono {
+        font-family: var(--mono);
+      }
+
+      .wrap {
+        max-width: var(--wrap);
+        margin: 0 auto;
+        padding-left: var(--gut-l);
+        padding-right: var(--gut-r);
+      }
+      .band {
+        padding-block: clamp(80px, 11vw, 140px);
+        position: relative;
+      }
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .h2 {
+        font-size: clamp(36px, 5.4vw, 68px);
+        line-height: 1.06;
+        font-weight: 600;
+      }
+      .lede {
+        font-size: clamp(17px, 1.6vw, 20px);
+        color: var(--muted);
+        max-width: 60ch;
+      }
+      .sec-head {
+        display: grid;
+        gap: 22px;
+        margin-bottom: clamp(48px, 6vw, 72px);
+        max-width: 860px;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: 48px;
+        padding: 0 22px;
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 15px;
+        transition:
+          background-color 120ms ease,
+          border-color 120ms ease;
+        white-space: nowrap;
+        cursor: pointer;
+        border: 1px solid transparent;
+        font-family: var(--sans);
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--blue-hi);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--line2);
+      }
+      .btn-ghost:hover {
+        border-color: var(--muted);
+      }
+      .btn-soon {
+        background: transparent;
+        color: var(--faint);
+        border: 1px dashed var(--line2);
+        cursor: default;
+      }
+      .soon-item {
+        color: var(--faint);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .soon-item small {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 2px 6px;
+      }
+      .soon-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 2px;
+      }
+      .soon-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+        border: 1px dashed var(--line2);
+        border-radius: 5px;
+        padding: 9px 14px;
+      }
+      .soon-chip small {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--faint);
+        border: 1px solid var(--line2);
+        border-radius: 3px;
+        padding: 2px 6px;
+      }
+      a.soon-chip {
+        color: var(--text);
+        border-style: solid;
+        transition: border-color 120ms ease;
+      }
+      a.soon-chip:hover {
+        border-color: var(--muted);
+      }
+      a.soon-chip small {
+        color: var(--blue-ink);
+      }
+      a.soon-item {
+        color: var(--muted);
+      }
+      a.soon-item:hover {
+        color: var(--text);
+      }
+      a.soon-item small {
+        color: var(--blue-ink);
+      }
+      .btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Nav */
+      .nav {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 72px;
+        gap: 24px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 17px;
+        letter-spacing: -0.01em;
+      }
+      /* The company logo (ink brief): its own colours, never recoloured or glowing. */
+      .logo {
+        flex: none;
+        width: 24px;
+        height: 24px;
+      }
+      .logo-lg {
+        width: 64px;
+        height: 64px;
+      }
+      .nav-links {
+        display: flex;
+        gap: clamp(18px, 2vw, 34px);
+        font-size: 14.5px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+      .nav-cta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .nav-cta .btn {
+        height: 42px;
+        padding: 0 20px;
+        font-size: 14px;
+      }
+      .nav-top-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .nav-top-link:hover {
+        color: var(--text);
+      }
+      @media (max-width: 1180px) {
+        .nav-top-link {
+          display: none;
+        }
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: var(--warn);
+      }
+      @media (max-width: 960px) {
+        .nav-links,
+        .status-pill {
+          display: none;
+        }
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding-block: clamp(70px, 9vw, 120px) clamp(60px, 7vw, 100px);
+      }
+      .hero .wrap {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+        gap: clamp(40px, 5vw, 80px);
+        align-items: center;
+      }
+      .hero h1 {
+        font-size: clamp(40px, 5.6vw, 76px);
+        line-height: 1.04;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+      }
+      .hero-copy {
+        display: grid;
+        gap: 30px;
+        min-width: 0;
+      }
+      .hero .lede {
+        font-size: clamp(18px, 1.7vw, 21px);
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      .hero-note {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--faint);
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .hero-note span {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .hero-note b {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      @media (max-width: 960px) {
+        .hero .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Intent feed */
+      .feed {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 20px;
+        min-width: 0;
+      }
+      .feed-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2px 4px 16px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 14px;
+        gap: 12px;
+      }
+      .feed-title {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .feed-live {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .feed-live i {
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: var(--ok);
+      }
+      .feed-list {
+        display: grid;
+        gap: 10px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .intent {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 5px;
+        background: var(--raise);
+        border: 1px solid var(--line);
+      }
+      .intent-ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 5px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .intent-main {
+        min-width: 0;
+      }
+      .intent-what {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .intent-meta {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--mono);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .chip::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: currentColor;
+      }
+      .s-approved {
+        color: var(--ok);
+      }
+      .s-pending {
+        color: var(--warn);
+      }
+      .s-rejected {
+        color: var(--stop);
+      }
+      .k-x402 {
+        background: var(--surface);
+        border: 1px solid var(--line2);
+        color: var(--blue-ink);
+      }
+      .k-transfer {
+        background: var(--surface);
+        border: 1px solid var(--line2);
+        color: var(--muted);
+      }
+      .feed-foot {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .feed-foot div {
+        display: grid;
+        gap: 2px;
+      }
+      .feed-foot small {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--faint);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .feed-foot strong {
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        font-size: 15px;
+      }
+      .meter {
+        height: 3px;
+        background: var(--line);
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .meter i {
+        display: block;
+        height: 100%;
+        background: var(--blue-ink);
+        width: 38%;
+      }
+
+      /* Stats */
+      .stats {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .stats .wrap {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .stat {
+        padding: 40px 24px;
+        border-left: 1px solid var(--line);
+        display: grid;
+        gap: 8px;
+      }
+      .stat:first-child {
+        border-left: 0;
+        padding-left: 0;
+      }
+      .stat b {
+        font-size: clamp(34px, 4vw, 54px);
+        font-weight: 500;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .stats-cap {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        padding-block: 0 22px;
+        letter-spacing: 0.04em;
+      }
+      @media (max-width: 900px) {
+        .stats .wrap {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stat {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+          padding-left: 0;
+        }
+        .stat:nth-child(-n + 2) {
+          border-top: 0;
+        }
+        .stat:last-of-type {
+          grid-column: 1 / -1;
+        }
+      }
+
+      /* Marquee */
+      .marquee-band {
+        padding-block: 56px;
+      }
+      .marquee-label {
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--faint);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+      }
+      .marquee-track {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 18px 44px;
+        align-items: center;
+      }
+      .mark {
+        font-size: clamp(17px, 1.8vw, 21px);
+        font-weight: 500;
+        color: var(--muted);
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .mark small {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        letter-spacing: 0.06em;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 3px 7px;
+      }
+
+      /* Pipeline */
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+      .step {
+        padding: 34px 30px 36px;
+        border-left: 1px solid var(--line);
+        display: grid;
+        gap: 18px;
+        align-content: start;
+        position: relative;
+        min-width: 0;
+      }
+      .step:first-child {
+        border-left: 0;
+      }
+      .step-n {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--faint);
+      }
+      .step h3 {
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.025em;
+      }
+      .step p {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .step ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+      .step li {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        padding: 7px 10px;
+        border-radius: 4px;
+        background: var(--raise);
+        border: 1px solid var(--line);
+        overflow-wrap: anywhere;
+      }
+      .step-bar {
+        height: 2px;
+        width: 32px;
+        background: var(--blue-ink);
+      }
+      .outcomes {
+        display: grid;
+        gap: 8px;
+      }
+      .outcomes div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        padding: 9px 12px;
+        border-radius: 5px;
+        background: var(--raise);
+      }
+      @media (max-width: 960px) {
+        .pipeline {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .step:nth-child(3) {
+          border-left: 0;
+        }
+        .step:nth-child(n + 3) {
+          border-top: 1px solid var(--line);
+        }
+      }
+      @media (max-width: 600px) {
+        .pipeline {
+          grid-template-columns: 1fr;
+        }
+        .step {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+        }
+        .step:first-child {
+          border-top: 0;
+        }
+      }
+
+      /* Money flow + loss calc */
+      .flow-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 28px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: clamp(26px, 3vw, 40px);
+        min-width: 0;
+      }
+      .flow {
+        display: grid;
+        gap: 0;
+        margin-top: 8px;
+      }
+      .node {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .node-ico {
+        width: 44px;
+        height: 44px;
+        border-radius: 5px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line2);
+        background: var(--surface);
+      }
+      .node-ico svg {
+        width: 20px;
+        height: 20px;
+      }
+      .node h4 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .node p {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .node .mono {
+        font-size: 12px;
+        color: var(--faint);
+      }
+      .link {
+        margin-left: 21px;
+        border-left: 1px dashed var(--line2);
+        height: 30px;
+        position: relative;
+      }
+      .link span {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--blue-ink);
+        white-space: nowrap;
+      }
+      .formula {
+        font-size: clamp(22px, 2.6vw, 32px);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        margin: 14px 0 28px;
+      }
+      .field {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+      .field-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .field-row output {
+        color: var(--text);
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+      }
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 6px;
+        background: var(--line);
+        outline-offset: 6px;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--text);
+        border: 4px solid var(--blue-ink);
+        cursor: pointer;
+      }
+      input[type='range']::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--text);
+        border: 4px solid var(--blue-ink);
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 8px;
+        padding: 22px;
+        border-radius: 6px;
+        background: var(--raise);
+        border: 1px solid var(--line2);
+        display: grid;
+        gap: 6px;
+      }
+      .result small {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .result b {
+        font-size: clamp(36px, 4.4vw, 56px);
+        font-weight: 500;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .result p {
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      @media (max-width: 900px) {
+        .flow-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Features */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        background: var(--line);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .feature {
+        background: var(--bg);
+        padding: 36px 32px 40px;
+        display: grid;
+        gap: 14px;
+        align-content: start;
+        transition: background-color 120ms ease;
+        min-width: 0;
+      }
+      .feature:hover {
+        background: var(--surface);
+      }
+      .feature-ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        background: var(--raise);
+        border: 1px solid var(--line2);
+        margin-bottom: 8px;
+      }
+      .feature-ico svg {
+        width: 22px;
+        height: 22px;
+      }
+      .feature h3 {
+        font-size: 21px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .feature p {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .feature code {
+        font-size: 12.5px;
+        color: var(--blue-ink);
+      }
+      @media (max-width: 960px) {
+        .features {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 620px) {
+        .features {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Approval split */
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: clamp(40px, 6vw, 96px);
+        align-items: center;
+      }
+      .split-copy {
+        display: grid;
+        gap: 26px;
+      }
+      .checks {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 14px;
+      }
+      .checks li {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        gap: 12px;
+        color: var(--muted);
+        font-size: 15.5px;
+      }
+      .checks li b {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .checks svg {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+      }
+      .phone {
+        max-width: 400px;
+        width: 100%;
+        justify-self: center;
+        background: var(--surface);
+        border: 1px solid var(--line2);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .phone-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 6px;
+        background: var(--bg);
+        border: 1px solid var(--line2);
+        display: grid;
+        place-items: center;
+      }
+      .phone-top b {
+        font-size: 15px;
+        font-weight: 500;
+        display: block;
+        line-height: 1.2;
+      }
+      .phone-top small {
+        font-size: 12px;
+        color: var(--faint);
+      }
+      .chat {
+        padding: 16px 6px 6px;
+        display: grid;
+        gap: 10px;
+      }
+      .bubble {
+        background: var(--raise);
+        border-radius: 6px;
+        padding: 14px 16px;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .bubble .mono {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .bubble hr {
+        border: 0;
+        border-top: 1px solid var(--line2);
+        margin: 10px 0;
+      }
+      .bubble-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .bubble-row span:first-child {
+        color: var(--faint);
+      }
+      .bubble-row span:last-child {
+        font-family: var(--mono);
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+      .tg-btns {
+        display: grid;
+        grid-template-columns: 2fr 3fr;
+        gap: 8px;
+      }
+      .tg-btn {
+        min-height: 48px;
+        border-radius: 5px;
+        background: transparent;
+        border: 1px solid var(--line2);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background-color 120ms ease,
+          border-color 120ms ease;
+      }
+      .tg-btn:hover {
+        background: var(--raise);
+      }
+      /* The panel's two actions: solid blue, and Reject in red text on a hairline. */
+      .tg-btn.ok {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+      .tg-btn.ok:hover {
+        border-color: var(--blue-hi);
+        background: var(--blue-hi);
+      }
+      .tg-btn.no {
+        color: var(--stop);
+      }
+      .tg-done {
+        font-family: var(--mono);
+        font-size: 12px;
+        text-align: center;
+        color: var(--muted);
+        padding: 6px;
+      }
+      .countdown {
+        color: var(--warn);
+      }
+      @media (max-width: 900px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Threats */
+      .threat-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+      }
+      .tab {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 5px;
+        border: 1px solid var(--line2);
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 14px;
+        cursor: pointer;
+        transition:
+          color 120ms ease,
+          border-color 120ms ease;
+      }
+      .tab:hover {
+        color: var(--text);
+      }
+      .tab[aria-selected='true'] {
+        background: var(--raise);
+        color: var(--text);
+        border-color: var(--blue-ink);
+      }
+      .threats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      .threat {
+        padding: 20px 22px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        min-width: 0;
+      }
+      .threat code {
+        font-size: 12.5px;
+        color: var(--stop);
+        overflow-wrap: anywhere;
+      }
+      .threat p {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .threat .tag {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--faint);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      /* Developers */
+      .dev {
+        display: grid;
+        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+        gap: clamp(36px, 5vw, 72px);
+        align-items: start;
+      }
+      .dev-copy {
+        display: grid;
+        gap: 26px;
+      }
+      .tools {
+        display: grid;
+        gap: 10px;
+      }
+      .tool {
+        display: grid;
+        grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+        gap: 16px;
+        padding: 14px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        align-items: baseline;
+      }
+      .tool code {
+        color: var(--blue-ink);
+        font-size: 13.5px;
+      }
+      .tool span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .code-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .code-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px 12px 10px;
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .code-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .code-tab {
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 5px;
+        border: 0;
+        background: transparent;
+        color: var(--faint);
+        font-family: var(--mono);
+        font-size: 12.5px;
+        cursor: pointer;
+      }
+      .code-tab:hover {
+        color: var(--text);
+      }
+      .code-tab[aria-selected='true'] {
+        background: var(--raise);
+        color: var(--text);
+      }
+      .copy {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 5px;
+        border: 1px solid var(--line2);
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .copy:hover {
+        color: var(--text);
+      }
+      .code-scroll {
+        overflow-x: auto;
+      }
+      pre.code {
+        margin: 0;
+        padding: 22px 24px 26px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--text);
+        tab-size: 2;
+      }
+      .t-k {
+        color: var(--blue-ink);
+      }
+      .t-s {
+        color: var(--ok);
+      }
+      .t-n {
+        color: var(--warn);
+      }
+      .t-c {
+        color: var(--faint);
+      }
+      .t-p {
+        color: var(--muted);
+      }
+      @media (max-width: 960px) {
+        .dev {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 520px) {
+        .tool {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
+
+      /* Chains */
+      .chains {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+      }
+      .chain {
+        position: relative;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        padding: clamp(28px, 3.4vw, 44px);
+        background: var(--surface);
+        display: grid;
+        gap: 22px;
+        min-width: 0;
+      }
+      .chain.soon {
+        border-style: dashed;
+      }
+      .chain.soon .kv dd {
+        color: var(--faint);
+      }
+      .order.soon-tag {
+        color: var(--muted);
+      }
+      .order.live-tag {
+        color: var(--ok);
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .order.live-tag::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: var(--ok);
+      }
+      .chain-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        flex-wrap: wrap;
+      }
+      .chain h3 {
+        font-size: clamp(30px, 3.4vw, 42px);
+        font-weight: 600;
+      }
+      .order {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--line2);
+        color: var(--muted);
+      }
+      .kv {
+        display: grid;
+        position: relative;
+      }
+      .kv div {
+        display: grid;
+        grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
+        gap: 16px;
+        padding: 13px 0;
+        border-top: 1px solid var(--line);
+        font-size: 14.5px;
+      }
+      .kv dt {
+        color: var(--faint);
+      }
+      .kv dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .kv dd.mono {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      @media (max-width: 920px) {
+        .chains {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 480px) {
+        .kv div {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+      }
+
+      /* Roadmap */
+      .road {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .phase {
+        border-top: 2px solid var(--line2);
+        padding-top: 22px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        min-width: 0;
+      }
+      .phase.done {
+        border-color: var(--ok);
+      }
+      .phase.now {
+        border-color: var(--blue-ink);
+      }
+      .phase-tag {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .phase.done .phase-tag {
+        color: var(--ok);
+      }
+      .phase.now .phase-tag {
+        color: var(--blue-ink);
+      }
+      .phase.next .phase-tag {
+        color: var(--faint);
+      }
+      .phase h3 {
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .phase ul {
+        margin: 0;
+        padding: 0 0 0 18px;
+        color: var(--muted);
+        font-size: 14.5px;
+        display: grid;
+        gap: 6px;
+      }
+      @media (max-width: 960px) {
+        .road {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          row-gap: 40px;
+        }
+      }
+      @media (max-width: 560px) {
+        .road {
+          grid-template-columns: 1fr;
+        }
+      }
+      .notice {
+        margin-top: 48px;
+        padding: 20px 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        border-left: 2px solid var(--warn);
+        background: var(--surface);
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        font-size: 15px;
+        color: var(--muted);
+      }
+      .notice b {
+        color: var(--warn);
+        font-weight: 500;
+      }
+
+      /* FAQ */
+      .faq {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: clamp(36px, 5vw, 80px);
+      }
+      details {
+        border-bottom: 1px solid var(--line);
+      }
+      details:first-of-type {
+        border-top: 1px solid var(--line);
+      }
+      summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 24px 0;
+        font-size: 18px;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        letter-spacing: -0.015em;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      summary::after {
+        content: '+';
+        font-weight: 300;
+        font-size: 24px;
+        line-height: 1;
+        color: var(--muted);
+      }
+      details[open] summary::after {
+        transform: rotate(45deg);
+      }
+      details p {
+        color: var(--muted);
+        padding-bottom: 24px;
+        max-width: 64ch;
+      }
+      details code {
+        font-size: 13px;
+        color: var(--blue-ink);
+      }
+      @media (max-width: 900px) {
+        .faq {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* CTA */
+      .cta {
+        position: relative;
+        border-radius: 6px;
+        padding: clamp(56px, 8vw, 110px) clamp(24px, 6vw, 80px);
+        text-align: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        display: grid;
+        gap: 28px;
+        justify-items: center;
+      }
+      .cta h2 {
+        font-size: clamp(40px, 6.4vw, 84px);
+        line-height: 1;
+        font-weight: 600;
+        max-width: 14ch;
+      }
+      .cta .hero-actions {
+        justify-content: center;
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 64px 48px;
+      }
+      .foot {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+        gap: 40px;
+      }
+      .foot h5 {
+        margin: 0 0 16px;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--faint);
+        font-weight: 400;
+      }
+      .foot ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+        font-size: 14.5px;
+        color: var(--muted);
+      }
+      .foot a:hover {
+        color: var(--text);
+      }
+      .foot-brand {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+      .foot-brand p {
+        color: var(--muted);
+        font-size: 14.5px;
+        max-width: 36ch;
+      }
+      .legal {
+        margin-top: 56px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: var(--faint);
+        font-family: var(--mono);
+      }
+      @media (max-width: 800px) {
+        .foot {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .foot-brand {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        html {
+          scroll-behavior: auto;
+        }
+      }
+      /* Setup: three steps instead of four. */
+      .pipeline.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .setup-after {
+        margin-top: 32px;
+      }
+      @media (max-width: 960px) {
+        .pipeline.three {
+          grid-template-columns: 1fr;
+        }
+        .pipeline.three .step {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+        }
+        .pipeline.three .step:first-child {
+          border-top: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <linearGradient id="dm-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2f8cff" />
+          <stop offset="1" stop-color="#2166e8" />
+        </linearGradient>
+        <mask id="dm-shape">
+          <ellipse cx="475" cy="558" rx="212" ry="236" fill="#fff" />
+          <rect x="585" y="192" width="102" height="380" fill="#fff" />
+          <ellipse cx="455" cy="542" rx="100" ry="123" fill="#000" />
+          <rect x="555" y="0" width="30" height="420" fill="#000" />
+          <rect x="687" y="0" width="313" height="1000" fill="#000" />
+        </mask>
+        <clipPath id="dm-low">
+          <path d="M200 748 L355 748 Q640 720 687 430 L1000 430 L1000 1000 L200 1000 Z" />
+        </clipPath>
+      </defs>
+      <symbol id="dm-logo" viewBox="165 183 620 620">
+        <g mask="url(#dm-shape)">
+          <rect width="1000" height="1000" fill="url(#dm-body)" />
+          <rect width="1000" height="1000" fill="#0c3fa6" clip-path="url(#dm-low)" />
+          <path d="M350 742 Q636 718 687 424 L687 478 Q648 748 372 764 Z" fill="#25e4ff" />
+        </g>
+      </symbol>
+    </svg>
+    <header class="nav">
+      <div class="wrap">
+        <a class="brand" href="#top" aria-label="DefiMind home">
+          <svg class="logo" aria-hidden="true"><use href="#dm-logo" /></svg>
+          DefiMind
+        </a>
+        <nav class="nav-links" aria-label="Main">
+          <a href="#how">How it works</a>
+          <a href="#security">Security</a>
+          <a href="#developers">Developers</a>
+          <a href="#chains">Chains</a>
+          <a href="#roadmap">Roadmap</a>
+        </nav>
+        <div class="nav-cta">
+          <span class="status-pill"
+            ><span class="dot" style="background: var(--ok)"></span>Live on mainnet</span
+          >
+          <a class="nav-top-link" href="whitepaper.html">Whitepaper</a>
+          <a
+            class="nav-top-link"
+            href="https://github.com/defimind2023/defimind-app"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          <a class="btn btn-primary" href="#how">See it in action</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="wrap">
+          <div class="hero-copy">
+            <h1>The agent every<br />agent needs.</h1>
+            <p class="lede">
+              DefiMind is the security layer your AI agent plugs into before it can move a cent.
+              Every payment is checked against your rules, test-run before signing, then approved by
+              you with a passkey in your own panel, or blocked. One MCP connection, any agent, any
+              platform.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#how"
+                >See how it works
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
+              <a class="btn btn-ghost" href="#security">Why it is safe</a>
+            </div>
+            <div class="hero-note">
+              <span><b>Solana</b> · <b>Robinhood</b> · Base next</span>
+              <span>USDC</span>
+              <span>x402 (pay-per-use APIs) · MCP (agent plug-in) · passkeys</span>
+            </div>
+          </div>
+
+          <aside class="feed" aria-label="Example intent feed">
+            <div class="feed-head">
+              <span class="feed-title">Payment requests · agent-1</span>
+              <span class="feed-live"><i></i>simulated example</span>
+            </div>
+            <ol class="feed-list" id="feed"></ol>
+            <div class="feed-foot">
+              <div>
+                <small>Spent today</small><strong id="spent">$38.40</strong>
+                <div class="meter"><i id="meter"></i></div>
+              </div>
+              <div><small>Daily max</small><strong>$100.00</strong></div>
+              <div><small>Per payment max</small><strong>$25.00</strong></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="DefiMind by the numbers">
+        <div class="wrap">
+          <div class="stat"><b>3</b><span>chains: Solana, Robinhood Chain, Base</span></div>
+          <div class="stat"><b>530</b><span>automated tests run on every change</span></div>
+          <div class="stat"><b>24</b><span>attack scenarios blocked in testing</span></div>
+          <div class="stat"><b>20</b><span>named reasons a payment is refused</span></div>
+          <div class="stat"><b>0</b><span>new smart contracts for you to trust</span></div>
+        </div>
+        <div class="wrap">
+          <p class="stats-cap">Figures from the codebase, SPEC v0.5, November 2026.</p>
+        </div>
+      </section>
+
+      <section class="marquee-band" aria-label="Built on">
+        <p class="marquee-label">
+          Built on proven, independently audited tools already live onchain
+        </p>
+        <div class="wrap">
+          <div class="marquee-track">
+            <span class="mark">Squads v4 <small>vault wallet</small></span>
+            <span class="mark">Safe <small>vault wallet</small></span>
+            <span class="mark">Safe Allowance Module <small>spend limit</small></span>
+            <span class="mark">x402 <small>pay-per-use payments</small></span>
+            <span class="mark">Model Context Protocol <small>how agents connect</small></span>
+            <span class="mark">USDC <small>digital dollar</small></span>
+            <span class="mark">Passkeys <small>approvals</small></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SITE-5: one-click deploy needs the repository public. -->
+      <section class="band" id="setup" hidden>
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">Setup · new, in beta</span>
+            <h2 class="h2">Set up in minutes. No server skills.</h2>
+            <p class="lede">
+              You run your own DefiMind, and that no longer takes a server admin. One button puts it
+              online, and your panel walks you through the rest, one plain step at a time. The
+              one-click route is new: if a step trips you up, tell us and we fix it.
+            </p>
+          </div>
+
+          <div class="pipeline three">
+            <div class="step">
+              <span class="step-n">Step 1</span>
+              <div class="step-bar"></div>
+              <h3>Deploy</h3>
+              <p>
+                Press Deploy to Render. Your DefiMind starts on its own server, makes its own keys
+                there, and gives you a setup code to claim it.
+              </p>
+              <ul>
+                <li>one button, beta</li>
+                <li>keys made by your server</li>
+                <li>a paid instance with a disk</li>
+              </ul>
+            </div>
+            <div class="step">
+              <span class="step-n">Step 2</span>
+              <div class="step-bar"></div>
+              <h3>Follow the guide</h3>
+              <p>
+                Nine short steps in your panel. Each one is checked on the chain before it counts as
+                done.
+              </p>
+              <ul>
+                <li>passkey, vault, daily limit</li>
+                <li>deposit by QR code</li>
+                <li>agent, rules, test run, live</li>
+              </ul>
+            </div>
+            <div class="step">
+              <span class="step-n">Step 3</span>
+              <div class="step-bar"></div>
+              <h3>Your agent pays</h3>
+              <p>
+                Inside your rules and the vault's daily limit, and it asks you, with your passkey,
+                above your threshold.
+              </p>
+              <ul>
+                <li>approve with your face or finger</li>
+                <li>Stop pauses every agent at once</li>
+                <li>live on Solana and Robinhood Chain</li>
+              </ul>
+            </div>
+          </div>
+
+          <ul class="checks setup-after">
+            <li>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                <path
+                  d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                  stroke="#3fb68b"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><span
+                ><b>A terminal only at the end.</b> The button and the panel do the setup; you open
+                a terminal once, to connect your agent.</span
+              >
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                <path
+                  d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                  stroke="#3fb68b"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><span
+                ><b>No wallet key to handle.</b> Your server makes and keeps its own wallet keys;
+                the panel only ever shows public addresses.</span
+              >
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                <path
+                  d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                  stroke="#3fb68b"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><span
+                ><b>No Telegram, no bot.</b> Approvals, alerts and the Stop button live in your
+                panel, with a push to your phone.</span
+              >
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                <path
+                  d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                  stroke="#3fb68b"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><span
+                ><b>Still your money, still your signature.</b> You sign every change to your vault
+                yourself, in Phantom. DefiMind never holds your wallet.</span
+              >
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="band" id="how">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">How it works</span>
+            <h2 class="h2">Check it, test-run it, then sign it. Or reject it.</h2>
+            <p class="lede">
+              The agent never holds a key. It asks DefiMind to pay, and DefiMind decides. The agent
+              also sends text, like its reason and the URL. You see that text, but DefiMind never
+              uses it to decide.
+            </p>
+          </div>
+
+          <div class="pipeline">
+            <div class="step">
+              <span class="step-n">Step 1</span>
+              <div class="step-bar"></div>
+              <h3>Request</h3>
+              <p>
+                Your agent asks DefiMind to pay. It holds no keys and no money. Asking is all it can
+                do.
+              </p>
+              <ul>
+                <li>paid_fetch</li>
+                <li>transfer</li>
+              </ul>
+            </div>
+            <div class="step">
+              <span class="step-n">Step 2</span>
+              <div class="step-bar"></div>
+              <h3>Policy</h3>
+              <p>
+                DefiMind checks the payment against the limits you set for this agent. Any doubt
+                means no.
+              </p>
+              <ul>
+                <li>per-payment and daily limits</li>
+                <li>networks and tokens you allow</li>
+                <li>recipients and websites you allow</li>
+              </ul>
+            </div>
+            <div class="step">
+              <span class="step-n">Step 3</span>
+              <div class="step-bar"></div>
+              <h3>Test run</h3>
+              <p>
+                Before any money moves, DefiMind rehearses the exact payment to see what it would
+                really do, not what the agent says it does.
+              </p>
+              <ul>
+                <li>exact balance changes</li>
+                <li>hidden permissions</li>
+                <li>programs you never approved</li>
+              </ul>
+            </div>
+            <div class="step">
+              <span class="step-n">Step 4</span>
+              <div class="step-bar"></div>
+              <h3>Decide</h3>
+              <p>
+                Each payment ends one of three ways. Every outcome is written to the audit log with
+                its reasons.
+              </p>
+              <div class="outcomes">
+                <div>Under your threshold <span class="chip s-approved">approved</span></div>
+                <div>At or above it <span class="chip s-pending">asks you</span></div>
+                <div>Breaks your rules <span class="chip s-rejected">rejected</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" style="padding-top: 0">
+        <div class="wrap">
+          <div class="flow-grid">
+            <div class="card">
+              <span class="eyebrow">Where the money lives</span>
+              <h3
+                style="font-size: clamp(26px, 2.8vw, 34px); font-weight: 500; margin: 18px 0 26px"
+              >
+                Funds stay in your vault. The agent spends from a small, capped wallet.
+              </h3>
+              <div class="flow">
+                <div class="node">
+                  <div class="node-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8fa3c0"
+                      stroke-width="1.7"
+                      aria-hidden="true"
+                    >
+                      <rect x="3" y="6" width="18" height="14" rx="3" />
+                      <path d="M3 10h18M16 15h2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4>Your vault (multisig)</h4>
+                    <p>
+                      Holds your funds. A wallet only you control: Squads v4 on Solana, Safe on
+                      Base.
+                    </p>
+                  </div>
+                </div>
+                <div class="link"><span>spend limit · your daily cap per 24h</span></div>
+                <div class="node">
+                  <div class="node-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8fa3c0"
+                      stroke-width="1.7"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4>Built-in spend limit</h4>
+                    <p>
+                      Tops up the spending wallet, never above your cap. The blockchain itself
+                      enforces this, not our code.
+                    </p>
+                  </div>
+                </div>
+                <div class="link"><span>refill</span></div>
+                <div class="node">
+                  <div class="node-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8fa3c0"
+                      stroke-width="1.7"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 3 4 6.5v5.6c0 4.8 3.3 8.6 8 9.9 4.7-1.3 8-5.1 8-9.9V6.5L12 3Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4>Guard spending wallet</h4>
+                    <p>
+                      Pocket money only (the "hot wallet"). Its key never leaves DefiMind. It is
+                      never shown to the agent and never written to logs.
+                    </p>
+                  </div>
+                </div>
+                <div class="link"><span>pays after policy + simulation</span></div>
+                <div class="node">
+                  <div class="node-ico">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8fa3c0"
+                      stroke-width="1.7"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4>Pay-per-use APIs and transfers</h4>
+                    <p>Only websites and recipients you approved in advance.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <span class="eyebrow">Worst case, in writing</span>
+              <p class="formula">Max loss per day = daily cap + hot wallet balance.</p>
+              <p class="lede" style="font-size: 15.5px; margin-bottom: 30px">
+                This holds even if DefiMind's own software has a bug or is hacked: the blockchain
+                itself enforces the cap, with independently audited code. Move the sliders to see
+                your own ceiling.
+              </p>
+              <div class="field">
+                <div class="field-row">
+                  <label for="cap">Onchain daily cap</label
+                  ><output id="capOut" for="cap">$100</output>
+                </div>
+                <input type="range" id="cap" min="10" max="2000" step="10" value="100" />
+              </div>
+              <div class="field">
+                <div class="field-row">
+                  <label for="hot">Hot wallet balance</label
+                  ><output id="hotOut" for="hot">$40</output>
+                </div>
+                <input type="range" id="hot" min="0" max="1000" step="5" value="40" />
+              </div>
+              <div class="field">
+                <div class="field-row">
+                  <label for="vault">Funds in your multisig</label
+                  ><output id="vaultOut" for="vault">$50,000</output>
+                </div>
+                <input type="range" id="vault" min="1000" max="500000" step="1000" value="50000" />
+              </div>
+              <div class="result" aria-live="polite">
+                <small>Most you can lose in 24 hours</small>
+                <b id="loss">$140</b>
+                <p id="lossNote">
+                  0.28% of your vault. The other $49,860 cannot be reached by the agent.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="band"
+        id="security"
+        style="
+          background: var(--surface);
+          border-top: 1px solid var(--line);
+          border-bottom: 1px solid var(--line);
+        "
+      >
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">Security model</span>
+            <h2 class="h2">Even if our software fails, your vault holds.</h2>
+            <p class="lede">
+              Two layers that do not trust each other. The blockchain caps how much can ever be
+              lost. The guard decides what gets paid at all.
+            </p>
+          </div>
+          <div class="features">
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path d="M4 6h16M4 12h10M4 18h6" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </div>
+              <h3>Policy engine</h3>
+              <p>
+                You set how much per payment, how much per day, and exactly who can be paid. A new
+                agent cannot spend a cent until you allow it.
+              </p>
+            </article>
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path d="M3 12h4l3-7 4 14 3-7h4" />
+                </svg>
+              </div>
+              <h3>Test run before signing</h3>
+              <p>
+                Every payment gets a rehearsal before it is signed. If it would do anything beyond
+                what you approved, even one hidden side effect, it never runs.
+              </p>
+            </article>
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path d="m21 4-9.5 9.5M21 4l-6 17-3.5-7.5L4 10l17-6Z" />
+                </svg>
+              </div>
+              <h3>Passkey approvals</h3>
+              <p>
+                Payments at or above your threshold wait in your panel, with a push to your phone
+                and a plain summary of what they will do. You approve with your face or fingerprint.
+                No answer in 10 minutes means no payment.
+              </p>
+            </article>
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5" />
+                </svg>
+              </div>
+              <h3>One-tap kill switch</h3>
+              <p>
+                Send <code>/kill</code> and every agent is paused at once. DefiMind also drafts the
+                transaction that cuts each chain's spending limit to zero. You sign it and the money
+                is shut off.
+              </p>
+            </article>
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+              </div>
+              <h3>Onchain daily cap</h3>
+              <p>
+                The daily refill uses the built-in limits of Squads and Safe, widely used vault
+                wallets that are independently audited. We add no code of our own to that layer.
+              </p>
+            </article>
+            <article class="feature">
+              <div class="feature-ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9db7f0"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path d="M6 3h9l4 4v14H6z" />
+                  <path d="M14 3v5h5M9 13h7M9 17h5" />
+                </svg>
+              </div>
+              <h3>Full audit log</h3>
+              <p>
+                Every decision is recorded with its exact reason, so you can always see what your
+                agent tried and why it was stopped. Amounts are exact to a millionth of a dollar and
+                never rounded.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="wrap split">
+          <div class="split-copy">
+            <span class="eyebrow">Human in the loop</span>
+            <h2 class="h2">Big payments wait for your thumb.</h2>
+            <p class="lede">
+              Set an approval threshold. Anything above it waits in your panel with what the payment
+              will actually do, so you approve the effect, not the agent's story. A Telegram bot can
+              send you the same alerts, if you want one.
+            </p>
+            <ul class="checks">
+              <li>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                  <path
+                    d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                    stroke="#3fb68b"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg
+                ><span
+                  ><b>One yes, one payment.</b> Your approval covers exactly this amount, this
+                  recipient, this one time. It cannot be reused or stretched.</span
+                >
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                  <path
+                    d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                    stroke="#3fb68b"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg
+                ><span
+                  ><b>Forged messages get nowhere.</b> Everything the guard sends the bot is
+                  cryptographically signed; old or duplicated messages are refused.</span
+                >
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                  <path
+                    d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                    stroke="#3fb68b"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg
+                ><span
+                  ><b>Attack alerts.</b> If an agent tries something shady, like a hidden permission
+                  grab, your phone pings right away with a suggestion to pause it.</span
+                >
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <circle cx="10" cy="10" r="9" stroke="#9db7f0" stroke-width="1.6" />
+                  <path
+                    d="m6.5 10.2 2.3 2.3 4.7-4.9"
+                    stroke="#3fb68b"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg
+                ><span
+                  ><b>Fail safe.</b> If the bot restarts, pending approvals expire. Nothing is paid
+                  by default.</span
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="phone" aria-label="Example approval in the owner panel">
+            <div class="phone-top">
+              <div class="avatar">
+                <svg class="logo" aria-hidden="true"><use href="#dm-logo" /></svg>
+              </div>
+              <div><b>DefiMind</b><small>owner panel</small></div>
+            </div>
+            <div class="chat">
+              <div class="bubble">
+                <span class="mono">Approval needed · agent-1</span>
+                <div
+                  style="
+                    font-size: 20px;
+                    font-weight: 500;
+                    letter-spacing: -0.02em;
+                    margin-top: 4px;
+                  "
+                >
+                  Pay 18.00 USDC
+                </div>
+                <hr />
+                <div class="bubble-row"><span>Kind</span><span>x402</span></div>
+                <div class="bubble-row"><span>Domain</span><span>api.datafeed.example</span></div>
+                <div class="bubble-row"><span>Chain</span><span>Solana mainnet</span></div>
+                <div class="bubble-row">
+                  <span>Effect</span><span>spending wallet −18.00 USDC</span>
+                </div>
+                <hr />
+                <div class="mono">
+                  Agent says: "Premium market data for the weekly report." Unverified.
+                </div>
+                <div class="mono" style="margin-top: 6px">
+                  Expires in <span class="countdown" id="cd">9:42</span>
+                </div>
+              </div>
+              <div class="tg-btns" id="tgBtns">
+                <button class="tg-btn no" type="button" id="tgNo">Reject</button>
+                <button class="tg-btn ok" type="button" id="tgOk">Approve with passkey</button>
+              </div>
+              <div class="tg-done" id="tgDone" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" style="padding-top: 0">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">What gets blocked</span>
+            <h2 class="h2">Twenty ways to say no.</h2>
+            <p class="lede">
+              Each refusal carries a reject code, so you, your agent and the audit log all know
+              exactly why.
+            </p>
+          </div>
+          <div class="threat-tabs" role="tablist" aria-label="Reject code groups">
+            <button class="tab" role="tab" aria-selected="true" data-group="shared" id="tab-shared">
+              Policy · 12
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-group="svm" id="tab-svm">
+              Solana · 5
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-group="evm" id="tab-evm">
+              Base · 3
+            </button>
+          </div>
+          <div class="threats" id="threats" role="tabpanel"></div>
+        </div>
+      </section>
+
+      <section
+        class="band"
+        id="developers"
+        style="
+          background: var(--surface);
+          border-top: 1px solid var(--line);
+          border-bottom: 1px solid var(--line);
+        "
+      >
+        <div class="wrap">
+          <div class="dev-copy" style="max-width: 760px">
+            <span class="eyebrow">For developers</span>
+            <h2 class="h2">Connect your agent. Coming soon.</h2>
+            <p class="lede">
+              An agent connector and a plain HTTP API are on the way: a few simple tools that let
+              any AI agent pay through DefiMind while you keep full control.
+            </p>
+            <div><span class="btn btn-soon">Developer tools · coming soon</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="chains">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">Chains</span>
+            <h2 class="h2">Solana. Robinhood Chain. Base. One guard, every chain.</h2>
+            <p class="lede">
+              The same protection everywhere: the same limits, the same test run before signing, and
+              the same kill switch, whether your agent pays on Solana, Robinhood Chain or Base.
+            </p>
+          </div>
+          <div class="chains">
+            <article class="chain svm">
+              <div class="chain-head">
+                <h3>Solana</h3>
+                <span class="order live-tag">Live</span>
+              </div>
+              <dl class="kv">
+                <div>
+                  <dt>Vault wallet</dt>
+                  <dd>Squads v4</dd>
+                </div>
+                <div>
+                  <dt>Spend limit</dt>
+                  <dd>Squads Spending Limit, resets every 24 h</dd>
+                </div>
+                <div>
+                  <dt>Payments</dt>
+                  <dd>x402 pay-per-use, in USDC</dd>
+                </div>
+                <div>
+                  <dt>Network</dt>
+                  <dd>Solana mainnet-beta</dd>
+                </div>
+                <div>
+                  <dt>Network ID</dt>
+                  <dd class="mono">solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp</dd>
+                </div>
+              </dl>
+            </article>
+            <article class="chain evm">
+              <div class="chain-head">
+                <h3>Robinhood Chain</h3>
+                <span class="order live-tag">Live</span>
+              </div>
+              <dl class="kv">
+                <div>
+                  <dt>Vault wallet</dt>
+                  <dd>Safe</dd>
+                </div>
+                <div>
+                  <dt>Spend limit</dt>
+                  <dd>Safe Allowance Module, resets every 24 h</dd>
+                </div>
+                <div>
+                  <dt>Payments</dt>
+                  <dd>x402 pay-per-use, in USDG</dd>
+                </div>
+                <div>
+                  <dt>Network</dt>
+                  <dd>Robinhood Chain mainnet</dd>
+                </div>
+                <div>
+                  <dt>Network ID</dt>
+                  <dd class="mono">eip155:4663</dd>
+                </div>
+              </dl>
+            </article>
+            <article class="chain evm">
+              <div class="chain-head">
+                <h3>Base</h3>
+                <span class="order soon-tag">Coming next</span>
+              </div>
+              <dl class="kv">
+                <div>
+                  <dt>Vault wallet</dt>
+                  <dd>Safe</dd>
+                </div>
+                <div>
+                  <dt>Spend limit</dt>
+                  <dd>Safe Allowance Module, resets every 24 h</dd>
+                </div>
+                <div>
+                  <dt>Payments</dt>
+                  <dd>x402 pay-per-use, in USDC</dd>
+                </div>
+                <div>
+                  <dt>Test network</dt>
+                  <dd>Base Sepolia</dd>
+                </div>
+                <div>
+                  <dt>Network ID</dt>
+                  <dd class="mono">eip155:8453</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="roadmap" style="padding-top: 0">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="eyebrow">Roadmap</span>
+            <h2 class="h2">Where we are, plainly.</h2>
+          </div>
+          <div class="road">
+            <div class="phase done">
+              <span class="phase-tag">Done</span>
+              <h3>Core stack</h3>
+              <ul>
+                <li>Policy engine and HTTP API</li>
+                <li>MCP server, four tools</li>
+                <li>Owner approvals and kill</li>
+                <li>530 tests, 24 attack cases</li>
+              </ul>
+            </div>
+            <div class="phase done">
+              <span class="phase-tag">Done</span>
+              <h3>Onchain cap, proven live</h3>
+              <ul>
+                <li>Spending inside the cap works</li>
+                <li>One unit over: refused by the chain itself</li>
+                <li>Kill rehearsed on Solana mainnet</li>
+              </ul>
+            </div>
+            <div class="phase now">
+              <span class="phase-tag">Live now</span>
+              <h3>Solana + Robinhood Chain</h3>
+              <ul>
+                <li>Live on mainnet with real money</li>
+                <li>Capped daily per chain to start</li>
+                <li>Real signing and kill end to end</li>
+              </ul>
+            </div>
+            <div class="phase next">
+              <span class="phase-tag">Next</span>
+              <h3>Base and higher caps</h3>
+              <ul>
+                <li>Base mainnet</li>
+                <li>Caps raised after clean weeks</li>
+                <li>Bug bounty</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" style="padding-top: 0">
+        <div class="wrap faq">
+          <div class="sec-head" style="margin: 0; align-content: start">
+            <span class="eyebrow">FAQ</span>
+            <h2 class="h2">Questions builders ask.</h2>
+          </div>
+          <div>
+            <details open>
+              <summary>Can my agent ever touch the funds in my multisig?</summary>
+              <p>
+                No. The agent never holds a key. DefiMind holds the key of a small spending wallet,
+                and your vault refills that wallet through a blockchain-enforced limit that can
+                never exceed your daily cap.
+              </p>
+            </details>
+            <details>
+              <summary>What if DefiMind itself is compromised?</summary>
+              <p>
+                The cap still holds, because the blockchain enforces it, not our software. The most
+                anyone can take in a day is your daily cap plus whatever sits in the spending
+                wallet. Press <code>/kill</code> and sign the prepared transaction to shut it off
+                entirely.
+              </p>
+            </details>
+            <details>
+              <summary>Do you deploy your own smart contracts?</summary>
+              <p>
+                No. DefiMind uses Squads v4 on Solana and Safe on Base, widely used vault wallets
+                that are independently audited and already live. There is no new contract for you to
+                trust.
+              </p>
+            </details>
+            <details>
+              <summary>What is x402?</summary>
+              <p>
+                An open standard that lets a website or API charge a small fee per request, paid
+                automatically. When an API asks for payment, DefiMind reads the terms, checks your
+                rules, runs the test run, pays only if everything passes, and hands the result to
+                your agent.
+              </p>
+            </details>
+            <details>
+              <summary>Which tokens are supported?</summary>
+              <p>
+                USDC only in v0.1, a digital dollar. Every amount is handled as an exact whole count
+                of the token's smallest unit, like counting in cents. A value that would need
+                rounding is refused, never rounded.
+              </p>
+            </details>
+            <details>
+              <summary>Does the agent's explanation affect the decision?</summary>
+              <p>
+                Never. The reason an agent gives is shown to you in your panel and marked as
+                unverified. Decisions use only your policy and the simulated effect of the
+                transaction.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" style="padding-top: 0">
+        <div class="wrap">
+          <div class="cta">
+            <svg class="logo logo-lg" aria-hidden="true"><use href="#dm-logo" /></svg>
+            <span class="eyebrow">Get started</span>
+            <h2>Give your agent spending power, not your keys.</h2>
+            <p class="lede" style="text-align: center">
+              Live on Solana and Robinhood Chain mainnet, with a capped daily limit to start. Plug
+              in through MCP and set your first spending policy in minutes.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#how"
+                >See how it works
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
+            </div>
+            <div class="soon-row">
+              <a
+                class="soon-chip"
+                href="https://github.com/defimind2023/defimind-app"
+                target="_blank"
+                rel="noopener"
+                >GitHub<small>source</small></a
+              >
+              <a class="soon-chip" href="whitepaper.html">Whitepaper<small>read</small></a>
+              <span class="soon-chip">Live demo<small>soon</small></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <div class="foot">
+          <div class="foot-brand">
+            <a class="brand" href="#top">
+              <svg class="logo" aria-hidden="true"><use href="#dm-logo" /></svg>
+              DefiMind
+            </a>
+            <p>
+              The security layer between AI agents and their wallets. Built for Solana, Robinhood
+              Chain and Base.
+            </p>
+          </div>
+          <div>
+            <h5>Product</h5>
+            <ul>
+              <li><a href="#how">How it works</a></li>
+              <li><a href="#security">Security model</a></li>
+              <li><a href="#chains">Chains</a></li>
+              <li><a href="#roadmap">Roadmap</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5>Developers</h5>
+            <ul>
+              <li>
+                <a
+                  class="soon-item"
+                  href="https://github.com/defimind2023/defimind-app"
+                  target="_blank"
+                  rel="noopener"
+                  >GitHub<small>source</small></a
+                >
+              </li>
+              <li>
+                <a class="soon-item" href="whitepaper.html">Whitepaper<small>read</small></a>
+              </li>
+              <li>
+                <span class="soon-item">Live demo<small>soon</small></span>
+              </li>
+              <li>
+                <span class="soon-item">MCP tools<small>soon</small></span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h5>Standards</h5>
+            <ul>
+              <li><a href="https://www.x402.org" target="_blank" rel="noopener">x402</a></li>
+              <li>
+                <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener"
+                  >Model Context Protocol</a
+                >
+              </li>
+              <li><a href="https://squads.so" target="_blank" rel="noopener">Squads</a></li>
+              <li><a href="https://safe.global" target="_blank" rel="noopener">Safe</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="legal">
+          <span>© 2026 DefiMind</span><span>SPEC v0.5 · live on mainnet</span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      ;(() => {
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+        const usd = (n) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
+
+        // Intent feed: four example requests.
+        const samples = [
+          {
+            k: 'x402',
+            what: 'GET api.datafeed.example/quotes',
+            amt: 0.25,
+            s: 'approved',
+            meta: 'solana · rules ok · test run ok',
+          },
+          {
+            k: 'transfer',
+            what: 'Transfer to vendor 7xKX…q4Pd',
+            amt: 18,
+            s: 'pending',
+            meta: '≥ approval threshold · waiting in your panel',
+          },
+          {
+            k: 'x402',
+            what: 'POST evil-mirror.example/v1/run',
+            amt: 2,
+            s: 'rejected',
+            meta: 'DOMAIN_NOT_ALLOWED',
+          },
+          {
+            k: 'x402',
+            what: 'GET api.weather.example/forecast',
+            amt: 0.05,
+            s: 'approved',
+            meta: 'solana · rules ok · test run ok',
+          },
+          {
+            k: 'transfer',
+            what: 'Transfer to 9fQe…1aZr',
+            amt: 5,
+            s: 'rejected',
+            meta: 'DELEGATE_DETECTED · SPL Approve hidden in tx',
+          },
+          {
+            k: 'x402',
+            what: 'GET api.search.example/v2',
+            amt: 0.4,
+            s: 'approved',
+            meta: 'solana · rules ok · test run ok',
+          },
+          {
+            k: 'transfer',
+            what: 'Transfer to vendor 7xKX…q4Pd',
+            amt: 60,
+            s: 'rejected',
+            meta: 'PER_TX_EXCEEDED · max $25.00',
+          },
+          {
+            k: 'x402',
+            what: 'GET api.llm-router.example/chat',
+            amt: 1.2,
+            s: 'approved',
+            meta: 'solana · rules ok · test run ok',
+          },
+          {
+            k: 'transfer',
+            what: 'Transfer to 3Hn8…uW2c',
+            amt: 4,
+            s: 'rejected',
+            meta: 'AUTHORITY_CHANGE_DETECTED',
+          },
+        ]
+        const label = { approved: 'approved', pending: 'pending', rejected: 'rejected' }
+        const feed = document.getElementById('feed')
+        const spentEl = document.getElementById('spent')
+        const meter = document.getElementById('meter')
+        let spent = 38.4,
+          idx = 0
+        function row(it) {
+          const li = document.createElement('li')
+          li.className = 'intent'
+          li.innerHTML =
+            `<span class="intent-ico ${it.k === 'x402' ? 'k-x402' : 'k-transfer'}">${it.k === 'x402' ? '402' : '→'}</span>` +
+            `<div class="intent-main"><div class="intent-what"></div><div class="intent-meta"></div></div>` +
+            `<span class="chip s-${it.s}">${label[it.s]} · $${it.amt.toFixed(2)}</span>`
+          li.querySelector('.intent-what').textContent = it.what
+          li.querySelector('.intent-meta').textContent = it.meta
+          return li
+        }
+        function push() {
+          const it = samples[idx++ % samples.length]
+          feed.prepend(row(it))
+          while (feed.children.length > 4) feed.lastElementChild.remove()
+          if (it.s === 'approved') {
+            spent = spent + it.amt > 95 ? 12 : spent + it.amt
+            spentEl.textContent = '$' + spent.toFixed(2)
+            meter.style.width = spent + '%'
+          }
+        }
+        for (let i = 0; i < 4; i++) push()
+        meter.style.width = spent + '%'
+
+        // Loss calculator.
+        const cap = document.getElementById('cap'),
+          hot = document.getElementById('hot'),
+          vault = document.getElementById('vault')
+        function calc() {
+          const c = +cap.value,
+            hw = +hot.value,
+            v = +vault.value
+          const loss = c + hw
+          document.getElementById('capOut').textContent = usd(c)
+          document.getElementById('hotOut').textContent = usd(hw)
+          document.getElementById('vaultOut').textContent = usd(v)
+          document.getElementById('loss').textContent = usd(loss)
+          const pct = Math.min(100, (loss / v) * 100)
+          const safe = Math.max(0, v - loss)
+          document.getElementById('lossNote').textContent =
+            `${pct < 0.01 ? '<0.01' : pct.toFixed(2)}% of your vault. The other ${usd(safe)} cannot be reached by the agent.`
+        }
+        ;[cap, hot, vault].forEach((el) => el.addEventListener('input', calc))
+        calc()
+
+        // Approval mockup.
+        let secs = 582
+        const cd = document.getElementById('cd')
+        const tick = setInterval(() => {
+          secs = secs > 0 ? secs - 1 : 600
+          cd.textContent = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0')
+        }, 1000)
+        function decide(ok) {
+          clearInterval(tick)
+          document.getElementById('tgBtns').hidden = true
+          const d = document.getElementById('tgDone')
+          d.hidden = false
+          d.innerHTML = ok
+            ? '<span style="color:var(--ok)">Approved.</span> This pays once, on exactly these terms.'
+            : '<span style="color:var(--stop)">Rejected.</span> OWNER_REJECTED written to the audit log.'
+        }
+        document.getElementById('tgOk').addEventListener('click', () => decide(true))
+        document.getElementById('tgNo').addEventListener('click', () => decide(false))
+
+        // Reject codes.
+        const codes = {
+          shared: [
+            ['PAUSED', 'The agent or the whole guard is paused.'],
+            ['CHAIN_NOT_ALLOWED', "The chain is not in this agent's policy."],
+            ['TOKEN_NOT_ALLOWED', 'The token is not on the allowlist.'],
+            ['RECIPIENT_NOT_ALLOWED', 'Direct transfer to an address you did not allow.'],
+            ['DOMAIN_NOT_ALLOWED', 'A payment to a website you did not allow.'],
+            ['PER_TX_EXCEEDED', 'Above your per-payment maximum.'],
+            ['DAILY_EXCEEDED', "Would push today's spend past your daily max."],
+            ['SIM_FAILED', 'The test run failed, so nothing was signed.'],
+            ['SIM_UNEXPECTED_EFFECT', 'The test run shows an effect the agent never asked for.'],
+            ['OWNER_REJECTED', 'You pressed Reject in your panel.'],
+            ['APPROVAL_TIMEOUT', 'No answer within 10 minutes.'],
+            ['INVALID_402', 'The payment request looked malformed, so it was refused.'],
+          ],
+          svm: [
+            [
+              'DELEGATE_DETECTED',
+              'A hidden permission that would let someone spend your tokens later.',
+            ],
+            [
+              'AUTHORITY_CHANGE_DETECTED',
+              'An attempt to hand control of an account to someone else.',
+            ],
+            ['ACCOUNT_CLOSE_DETECTED', 'An attempt to close an account and sweep out its balance.'],
+            ['UNKNOWN_PROGRAM_DETECTED', 'The payment calls a program you never approved.'],
+            [
+              'HIDDEN_ACCOUNTS_DETECTED',
+              'The transaction tries to hide which accounts it touches.',
+            ],
+          ],
+          evm: [
+            ['APPROVAL_DETECTED', 'A hidden token approval that would allow withdrawals later.'],
+            ['PERMIT_DETECTED', 'A signature request that would authorize future spending.'],
+            ['DELEGATION_DETECTED', 'An attempt to hand the whole account over to other code.'],
+          ],
+        }
+        const tagName = { shared: 'All chains', svm: 'Solana', evm: 'Base' }
+        const grid = document.getElementById('threats')
+        function showCodes(group) {
+          grid.innerHTML = ''
+          for (const [c, d] of codes[group]) {
+            const el = document.createElement('div')
+            el.className = 'threat'
+            el.innerHTML = `<span class="tag">${tagName[group]}</span><code>${c}</code><p>${d}</p>`
+            grid.append(el)
+          }
+          grid.setAttribute('aria-labelledby', 'tab-' + group)
+        }
+        document.querySelectorAll('.tab').forEach((b) =>
+          b.addEventListener('click', () => {
+            document
+              .querySelectorAll('.tab')
+              .forEach((x) => x.setAttribute('aria-selected', x === b))
+            showCodes(b.dataset.group)
+          }),
+        )
+        showCodes('shared')
+      })()
+    </script>
+  </body>
+</html>

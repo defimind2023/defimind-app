@@ -1,0 +1,45 @@
+{
+  "name": "@defimind/guard-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Policy engine, simulation, signer, x402 client, HTTP API and DB.",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/main.ts",
+    "start": "tsx --env-file=.env src/main.ts",
+    "create-agent": "tsx --env-file=.env src/scripts/create-agent.ts",
+    "revoke-agent": "tsx --env-file=.env src/scripts/revoke-agent.ts",
+    "remove-passkey": "tsx --env-file=.env src/scripts/remove-passkey.ts",
+    "passkey-code": "tsx --env-file=.env src/scripts/passkey-code.ts",
+    "db:backup": "tsx --env-file=.env src/scripts/db-backup.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@defimind/onchain": "workspace:*",
+    "@defimind/shared": "workspace:*",
+    "@fastify/rate-limit": "^11.2.2",
+    "@simplewebauthn/server": "^13.3.3",
+    "@x402/core": "^2.29.0",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.8",
+    "tsx": "^4.23.15",
+    "viem": "^2.57.16",
+    "web-push": "3.6.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/web-push": "3.6.4",
+    "drizzle-kit": "^0.31.11"
+  }
+}

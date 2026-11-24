@@ -1,0 +1,231 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: lint / typecheck / test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Jupiter and Whirlpool are read from mainnet for the swap fork test, never kept in the repo.
+      - uses: actions/cache@v4
+        with:
+          path: packages/onchain/.cache/programs
+          key: mainnet-programs-${{ hashFiles('packages/onchain/test/fixtures/jupiter-swap.json') }}
+
+      - name: Test
+        env:
+          FORK_REQUIRED: '1'
+        run: pnpm test
+
+  # A probe of a public endpoint, not of our code: kept apart so an RPC outage does not fail the
+  # code job. simulate() on Base needs eth_simulateV1, which not every provider serves.
+  base-rpc:
+    name: eth_simulateV1 on Base Sepolia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: check:simulate
+        working-directory: packages/onchain
+        env:
+          BASE_RPC_URL: https://sepolia.base.org
+        run: pnpm check:simulate
+
+  # Same kind of probe, on Solana mainnet: the Squads v4 program our tests run (a dumped binary)
+  # must still be the one deployed, and its program config is the fee the owner pays on create.
+  squads-mainnet:
+    name: Squads v4 on Solana mainnet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: check:squads
+        working-directory: packages/onchain
+        env:
+          SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
+        run: pnpm check:squads
+
+  # The owner's signing page (ADR 003) in a real Chromium, with Phantom faked. Kept out of
+  # `pnpm test`: it needs a browser, and it is the page the owner trusts with the kill.
+  signing-page:
+    name: signing page (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: npx --prefix packages/onchain playwright install --with-deps chromium
+
+      - name: test:web
+        run: pnpm --filter @defimind/onchain test:web
+
+  # The owner panel (CR-012) in a real Chromium, with a virtual authenticator and a stand-in
+  # guard-core that enforces the owner-route rules. Served under the SPEC's CSP.
+  panel:
+    name: owner panel (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: npx --prefix packages/panel playwright install --with-deps chromium
+
+      - name: test:web
+        run: pnpm --filter @defimind/panel test:web
+
+  # The deployable images, built from the repo root as `fly deploy` builds them. Two checks: the
+  # build context of every Dockerfile, which is what gets uploaded to a remote builder, holds none of
+  # the planted decoys; and the images build. A Dockerfile-specific .dockerignore would replace the
+  # root one under BuildKit, so none is allowed.
+  images:
+    name: docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Only the root .dockerignore
+        run: |
+          extra=$(git ls-files '*.dockerignore' | grep -v '^.dockerignore$' || true)
+          if [ -n "$extra" ]; then echo "replaces the root .dockerignore under BuildKit: $extra"; exit 1; fi
+
+      - name: Plant a decoy for every pattern in the root .dockerignore
+        run: |
+          for f in .env .env.production packages/telegram-bot/.env packages/guard-core/.env.local \
+            e2e/.env packages/guard-core/hot-keypair.json id.json packages/a.pem packages/b.key \
+            packages/guard-core/data/guard.db x.db-journal y.sqlite z.sqlite3 backups/old.db app.log; do
+            mkdir -p "$(dirname "$f")"
+            echo DECOY_SECRET > "$f"
+          done
+
+      - name: No decoy in any build context
+        run: |
+          for dockerfile in $(git ls-files '**/Dockerfile' 'Dockerfile'); do
+            cp "$dockerfile" /tmp/real
+            printf 'FROM scratch\nCOPY . /ctx\n' > "$dockerfile"
+            rm -rf /tmp/ctx
+            docker build -q -f "$dockerfile" --output type=local,dest=/tmp/ctx .
+            cp /tmp/real "$dockerfile"
+            leaked=$(grep -rl DECOY_SECRET /tmp/ctx --exclude-dir=.github || true)
+            if [ -n "$leaked" ]; then echo "$dockerfile context holds:"; echo "$leaked"; exit 1; fi
+            echo "$dockerfile: no decoy in the context"
+          done
+
+      - name: Build the bot image
+        run: docker build -f packages/telegram-bot/Dockerfile -t telegram-bot .
+
+      - name: Build the guard-core image
+        run: docker build -f packages/guard-core/Dockerfile -t guard-core .
+
+      # The image installs with --ignore-scripts, so prove the native SQLite binding loads, and that
+      # the entrypoint's tools are there: it mounts tmpfs and drops to the node user with setpriv.
+      - name: guard-core image smoke test
+        run: |
+          docker run --rm --entrypoint node guard-core -e \
+            "new (require('better-sqlite3'))(':memory:').prepare('select 1').get(); console.log('sqlite ok')"
+          docker run --rm --entrypoint sh guard-core -c 'command -v mount && command -v setpriv'
+          # bigint-buffer must be the vendored JavaScript copy, never the one with a native binding.
+          docker run --rm --entrypoint node guard-core -e \
+            "const [d] = require('fs').readdirSync('node_modules/.pnpm').filter((n) => n.startsWith('bigint-buffer@'));
+            if (!d.includes('vendor')) throw new Error(d);
+            const b = require('./node_modules/.pnpm/' + d + '/node_modules/bigint-buffer');
+            if (b.toBigIntLE(Buffer.from([1, 2])) !== 513n) throw new Error('toBigIntLE');
+            console.log('bigint-buffer ok:', d)"
+
+  foundry:
+    name: forge test (onchain)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      # One fork per chain and run, at a block read once here. Robinhood Chain's RPCs keep recent state
+      # only, so a block fixed in the code falls out of reach; a fresh fork per test draws the mainnet
+      # RPC's Cloudflare challenge.
+      - name: Fork blocks
+        run: |
+          mainnet=$(cast block-number --rpc-url https://rpc.mainnet.chain.robinhood.com)
+          testnet=$(cast block-number --rpc-url https://rpc.testnet.chain.robinhood.com)
+          echo "ROBINHOOD_MAINNET_FORK_BLOCK=$mainnet" >> "$GITHUB_ENV"
+          echo "ROBINHOOD_TESTNET_FORK_BLOCK=$testnet" >> "$GITHUB_ENV"
+
+      - name: forge test
+        working-directory: packages/onchain
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+        run: |
+          if [ ! -f foundry.toml ]; then
+            echo "::notice::No Foundry project yet. Skipping."
+            exit 0
+          fi
+          forge --version
+          forge test -vvv

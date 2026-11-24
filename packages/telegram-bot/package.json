@@ -1,0 +1,33 @@
+{
+  "name": "@defimind/telegram-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Owner approvals and kill switch on Telegram.",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx --env-file=.env src/main.ts",
+    "start": "node --import tsx src/main.ts"
+  },
+  "dependencies": {
+    "@defimind/shared": "workspace:*",
+    "@fastify/rate-limit": "^11.2.2",
+    "fastify": "^5.12.8",
+    "grammy": "^1.46.0",
+    "pino": "^10.4.0",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  }
+}

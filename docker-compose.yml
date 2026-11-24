@@ -1,0 +1,69 @@
+# DefiMind on any server with Docker: guard-core with its owner panel, the Telegram bot with
+# --profile telegram, and Caddy for HTTPS with --profile tls. The same images as on Fly. Settings and
+# keys come from ~/.defimind/compose.env (see docs/self-host.md, "Run anywhere"); none of them is in
+# this file.
+#
+#   docker compose --env-file ~/.defimind/compose.env up -d --build                 # this machine only
+#   DOMAIN=guard.example.com docker compose --env-file … --profile tls up -d --build  # HTTPS for agents
+#
+# The bot is optional (CR-017). With it, add --profile telegram and put BOT_URL=http://bot:8788 in
+# compose.env next to BOT_TOKEN and BOT_WEBHOOK_SECRET: guard-core takes all three or none.
+
+services:
+  guard-core:
+    build:
+      context: .
+      dockerfile: packages/guard-core/Dockerfile
+    restart: unless-stopped
+    env_file: ${DEFIMIND_ENV:-~/.defimind/compose.env}
+    environment:
+      # The private listener (admin and bot routes) is on the compose network only.
+      HOST: 0.0.0.0
+      PORT: '8787'
+      # The public listener serves the agent and owner routes. It believes Fly-Client-IP for its
+      # per-IP limit, so it must never face the internet directly: Caddy overwrites that header.
+      PUBLIC_HOST: 0.0.0.0
+      PUBLIC_PORT: '8080'
+      TRUST_FLY_CLIENT_IP: 'true'
+      DATABASE_URL: file:/data/guard.db
+    # The entrypoint writes the hot keys here; already tmpfs, so it needs no mount privilege.
+    tmpfs:
+      - /run/defimind:size=64k,mode=0700
+    volumes:
+      - guard_data:/data
+    ports:
+      - 127.0.0.1:8080:8080
+
+  bot:
+    profiles: [telegram]
+    build:
+      context: .
+      dockerfile: packages/telegram-bot/Dockerfile
+    restart: unless-stopped
+    env_file: ${DEFIMIND_ENV:-~/.defimind/compose.env}
+    environment:
+      HOST: 0.0.0.0
+      PORT: '8788'
+      GUARD_URL: http://guard-core:8787
+    depends_on:
+      - guard-core
+
+  caddy:
+    profiles: [tls]
+    image: caddy:2.10.2
+    restart: unless-stopped
+    environment:
+      # Caddy refuses to start without it, so no catch-all site is ever served.
+      DOMAIN: ${DOMAIN:-}
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - guard-core
+
+volumes:
+  guard_data:
+  caddy_data:

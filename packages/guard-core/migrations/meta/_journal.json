@@ -1,0 +1,132 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793728982367,
+      "tag": "0000_daily_punisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794240781287,
+      "tag": "0001_policy_v06_and_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794241488499,
+      "tag": "0002_breaker_window",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794244978474,
+      "tag": "0003_mandates",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794248678812,
+      "tag": "0004_backfill_x402_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794251128874,
+      "tag": "0005_receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794251355401,
+      "tag": "0006_passkeys",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794251823093,
+      "tag": "0007_enrol_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794254021289,
+      "tag": "0008_passkey_last_used",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795025282777,
+      "tag": "0009_owner_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1795043566008,
+      "tag": "0010_approval_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1795050737257,
+      "tag": "0011_push_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1795051900295,
+      "tag": "0012_executions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1795052405243,
+      "tag": "0013_anchors",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1795136802132,
+      "tag": "0014_chain_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1795535098823,
+      "tag": "0015_trading",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1795539432405,
+      "tag": "0016_x402_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1795550891078,
+      "tag": "0017_agent_wallets",
+      "breakpoints": true
+    }
+  ]
+}
