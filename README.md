@@ -72,6 +72,7 @@ live and press kill. Then connect the agent from the same checkout:
 ## Read these first
 
 - [`SPEC.md`](./SPEC.md) — the source of truth for all interfaces. Do not change it without owner approval.
+- [`docs/trading.md`](./docs/trading.md) — trading on Solana: limits, the risk card, trading by hand.
 - [`docs/adr/`](./docs/adr) — architecture decisions.
 
 ## Packages

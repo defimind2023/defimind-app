@@ -154,12 +154,12 @@ function vaultControl(
     ? {
         status: 'warn',
         message: `One key, the multisig's config authority, can empty the vault on ${chain}.`,
-        fix: 'Keep the config authority on a hardware wallet, such as a Ledger connected through Phantom.',
+        fix: 'For larger balances, hand the vault to a hardware wallet, such as a Ledger connected through Phantom. It must replace the current key both as config authority and as member, or the current key can still empty the vault.',
       }
     : {
         status: 'warn',
         message: `One key can empty the vault on ${chain}.`,
-        fix: 'Add another owner to the Safe, or make it a 2-of-3, so no single key can move its funds.',
+        fix: 'For larger balances, make the Safe a 2-of-3, or replace its owner with a hardware wallet. Another owner added at threshold 1 does not help: either key could still move the funds alone.',
       }
 }
 
@@ -257,19 +257,29 @@ async function backup(deps: DoctorDeps): Promise<DoctorCheck> {
   }
   const age = async (name: string) => deps.now().getTime() - (await stat(join(dir, name))).mtimeMs
   const newest = Math.min(...(await Promise.all(backups.map(age))))
-  const uploaded = deps.bucket
-    ? await readFile(join(dir, UPLOADED), 'utf8').catch(() => undefined)
-    : undefined
+  const uploaded = deps.bucket ? await lastUpload(join(dir, UPLOADED)) : undefined
+  const stale = newest > BACKUP_MAX_AGE_MS
+  const unsent =
+    deps.bucket === true &&
+    (uploaded === undefined || deps.now().getTime() - uploaded.getTime() > BACKUP_MAX_AGE_MS)
   const upload = !deps.bucket
     ? ''
     : uploaded === undefined
       ? ' None has been uploaded to the bucket yet.'
-      : ` The last upload to the bucket was at ${uploaded}.`
-  const stale = newest > BACKUP_MAX_AGE_MS
+      : ` The last upload to the bucket was at ${uploaded.toISOString()}.`
   return {
     id: 'backup',
-    status: stale || (deps.bucket === true && uploaded === undefined) ? 'warn' : 'ok',
+    status: stale || unsent ? 'warn' : 'ok',
     message: `${stale ? 'The newest database backup is more than 26 hours old.' : 'A database backup from the last 26 hours exists.'}${upload}`,
-    ...(stale ? { fix: 'Check the log for "database backup failed".' } : {}),
+    ...(stale || unsent ? { fix: 'Check the log for "database backup failed".' } : {}),
   }
+}
+
+/** The marker holds one ISO time; anything else, or more, counts as no upload. */
+async function lastUpload(file: string): Promise<Date | undefined> {
+  const text = await readFile(file, 'utf8').catch(() => '')
+  const at = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(text)
+    ? new Date(text)
+    : undefined
+  return at === undefined || Number.isNaN(at.getTime()) ? undefined : at
 }

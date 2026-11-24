@@ -19,7 +19,11 @@ export interface BackupDeps {
   log: Pick<FastifyBaseLogger, 'info' | 'error'>
   fetch: typeof fetch
   bucket?: BucketConfig | undefined
+  /** Told of a failed day, once: the schedule runs once a day. */
+  failed?: (what: 'backup' | 'upload') => void
 }
+
+export class UploadFailed extends Error {}
 
 /** Beside the database, on the same volume: the one disk a deployment already keeps. */
 export function backupsDir(databaseUrl: string): string | undefined {
@@ -46,7 +50,11 @@ export async function backUp(deps: BackupDeps): Promise<string | undefined> {
   await prune(dir)
   deps.log.info({ backup: name }, 'database backed up')
   if (deps.bucket !== undefined) {
-    await upload(deps.bucket, name, await readFile(file), deps.fetch, deps.now())
+    await upload(deps.bucket, name, await readFile(file), deps.fetch, deps.now()).catch(
+      (error: unknown) => {
+        throw new UploadFailed(error instanceof Error ? error.message : 'upload failed')
+      },
+    )
     await writeFile(join(dir, UPLOADED), deps.now().toISOString(), { mode: 0o600 })
     deps.log.info({ backup: name }, 'database backup uploaded')
   }
@@ -86,6 +94,7 @@ export function scheduleBackups(
           await run(deps)
         } catch (error) {
           deps.log.error({ err: error }, 'database backup failed')
+          deps.failed?.(error instanceof UploadFailed ? 'upload' : 'backup')
         }
         next()
       },

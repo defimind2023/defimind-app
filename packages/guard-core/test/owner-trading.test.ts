@@ -8,7 +8,15 @@ import { BONK, trading, Venue } from './venue.js'
 const MAINNET = CHAINS.solanaMainnet
 const listed = [
   { id: BONK, symbol: 'FAKE', name: 'x'.repeat(500), decimals: 5, icon: 'https://evil/x.png' },
-  { id: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6, isVerified: true, holderCount: 9.5 },
+  {
+    id: USDC,
+    symbol: 'USDC',
+    name: 'USD Coin',
+    decimals: 6,
+    isVerified: true,
+    holderCount: 9.5,
+    liquidity: 1e21,
+  },
   { id: 'not a mint', symbol: 'BAD', name: 'bad', decimals: 6 },
 ]
 const facts: Omit<TokenRisk, 'venue' | 'flags'> = {
@@ -69,6 +77,7 @@ describe('token search (CR-025)', () => {
       venue: { holders: 9 },
     })
     expect(tokens[1].name).toHaveLength(64)
+    expect(JSON.stringify(tokens)).not.toContain('e+')
     expect(JSON.stringify(tokens)).not.toContain('evil')
     expect(String(h.fetch.mock.calls[0]?.[0])).toBe(
       'https://lite-api.jup.ag/tokens/v2/search?query=bonk',

@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.2.0 — 2026-11-24
+
+**Update:** your service never updates by itself. On Render, click **Manual Deploy**, then **Deploy
+latest commit**. On Fly, redeploy both apps. Nothing to migrate by hand: the database updates itself
+on start.
+
+### Added
+
+- **Trading on Solana, through Jupiter.** Agents can buy and sell tokens under three limits you set:
+  each buy, all buys in a day, and held in one token. You can also find a token, read its risk card,
+  and trade by hand with your passkey. Shadow mode runs it all without signing. See
+  [`docs/trading.md`](./docs/trading.md). Not financial advice: a token can lose all its value.
+- **An own wallet per agent**, opt-in. An agent with its own spending wallet and daily limit pays
+  only from it, and can be stopped alone ([`docs/owner-keys.md`](./docs/owner-keys.md)).
+- **Daily database backups**, the newest 14 kept, with an optional encrypted copy to an
+  S3-compatible bucket and an alert when a backup fails.
+
+### Security
+
+- The admin token only tightens a policy. Loosening, resuming and task budgets need your passkey in
+  the panel.
+- With a setup code configured, only that code enrols the first passkey.
+- One public listener no longer serves the admin API, and the public listener checks the Host
+  header.
+- An x402 approval is bound to its exact request.
+- The doctor and the panel say who controls each vault, and when one key can empty it.
+- A buy that waits for you draws nothing from the vault until you approve it.
+- Positions are booked from what landed onchain.
+- The `bigint-buffer` advisory is closed: the dependency is replaced by its JavaScript path.
+
 ## v0.1.0-beta — 2026-11-09
 
 The first public beta. DefiMind runs with real money on Robinhood Chain (USDG) and Solana (USDC)

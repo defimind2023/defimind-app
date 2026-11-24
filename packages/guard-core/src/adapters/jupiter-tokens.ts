@@ -40,7 +40,11 @@ function info(chain: ChainId, token: z.infer<typeof venueToken>): TokenInfo {
     verified: token.isVerified === true,
     venue: {
       ...(token.holderCount === undefined ? {} : { holders: Math.floor(token.holderCount) }),
-      ...(token.liquidity === undefined ? {} : { liquidityUsd: token.liquidity.toFixed(2) }),
+      // toFixed writes 1e21 and up in exponent form, which no decimal reader takes: such a figure
+      // is a lie anyway, so the field goes rather than the whole answer.
+      ...(token.liquidity === undefined || token.liquidity >= 1e18
+        ? {}
+        : { liquidityUsd: token.liquidity.toFixed(2) }),
       ...(token.organicScore === undefined ? {} : { organicScore: token.organicScore }),
       ...(createdAt === undefined ? {} : { createdAt }),
     },

@@ -240,7 +240,7 @@ export async function clearSwap(
   const waits = how.verdict.decision === 'needs_approval' && owner === undefined
   if (waits && short) {
     const passkey = needsPasskey(deps.passkey, intent)
-    return askOwner(deps, intent, UNTESTED, { flags: how.verdict.flags, passkey })
+    return askOwner(deps, intent, UNTESTED, { flags: how.verdict.flags, passkey, untested: true })
   }
   if (how.side === 'buy' && !how.shadow) {
     try {

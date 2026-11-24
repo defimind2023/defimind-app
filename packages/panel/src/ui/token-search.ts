@@ -15,7 +15,7 @@ function result(ctx: Context, policy: PolicyView, token: TokenInfo, save: Save) 
     'div',
     { class: 'item' },
     tokenLine(token),
-    !token.verified && el('span', { class: 'flag' }, 'Not verified by Jupiter'),
+    !token.verified && el('span', { class: 'flag' }, 'Jupiter says: not verified'),
     allowed
       ? el('span', { class: 'muted' }, 'Already allowed for this agent.')
       : button('Check risk', async () => {
@@ -76,6 +76,11 @@ export function tokenSearch(ctx: Context, policy: PolicyView, chain: string, sav
   unverified.addEventListener('change', show)
   return card(
     el('h2', {}, 'Find a token'),
+    el(
+      'p',
+      { class: 'muted' },
+      'Names and symbols are what Jupiter lists, and anyone can copy them. The mint address is what identifies a token.',
+    ),
     el('label', { for: 'token-q' }, 'Name, symbol or mint address'),
     query,
     button('Search', async () => {

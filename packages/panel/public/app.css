@@ -643,6 +643,7 @@ body[data-screen='approval'] h1,
 body[data-screen='mandate'] h1,
 .summary,
 .shadow-total,
+.figures,
 .date {
   font-variant-numeric: tabular-nums;
 }
@@ -878,4 +879,10 @@ body[data-screen='enrol'] .primary {
 
 .facts li + li {
   margin-top: 4px;
+}
+
+/* The risk card ends on its own line: what it is not. */
+.risk > p {
+  margin-top: 14px;
+  color: var(--text);
 }

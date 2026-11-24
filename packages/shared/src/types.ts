@@ -365,6 +365,8 @@ export interface ApprovalRequest {
   pinned?: { recipient: Address; amount: Amount }
   /** CR-010: true when only a passkey may approve it; the bot then offers no Approve button. */
   passkey?: boolean
+  /** CR-024: a buy asked before its test run, funded and test-run only once approved. */
+  untested?: true
 }
 
 /** CR-010: the same hook, asking the owner to open a task budget rather than to pay. */
@@ -394,7 +396,13 @@ export interface BudgetView {
   /** CR-010: the agent's active mandates. Absent from a v0.5 guard-core. */
   mandates?: Mandate[]
   /** CR-011: shadow mode since its first shadowed payment, so the bot can offer to go live. */
-  shadow?: { since: string; total: Amount; count: number }
+  shadow?: {
+    since: string
+    total: Amount
+    count: number
+    /** CR-024: how many shadowed intents live would have taken to the owner, and why. */
+    asked?: { count: number; flags: string[] }
+  }
 }
 
 /** One entry of GET /v1/admin/chains (CR-006). */

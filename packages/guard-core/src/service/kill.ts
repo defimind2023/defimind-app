@@ -4,7 +4,7 @@ import type { FastifyBaseLogger } from 'fastify'
 import type { PaymentDeps } from './payments.js'
 
 /** An agent's own wallet carries its address, so the owner's link names that wallet's limit. */
-export type KillTransaction = OwnerTransaction & { wallet?: { agentId: string; address: string } }
+export type KillTransaction = OwnerTransaction
 
 type Source = { adapter: ChainAdapter; wallet?: { agentId: string; address: string } }
 

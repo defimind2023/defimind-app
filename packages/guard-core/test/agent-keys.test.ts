@@ -41,6 +41,17 @@ describe("an agent's own key on disk (CR-022)", () => {
     expect(own).toEqual({ file, address: privateKeyToAddress(key) })
   })
 
+  it('reads the variable only for ids no other id could share it with', async () => {
+    const file = join(fresh(), 'given')
+    writeFileSync(file, generatePrivateKey())
+    const env = { AGENT_WALLET_BOT_1_ROBINHOOD_TESTNET_FILE: file }
+    const dir = fresh()
+    const keys = agentKeys(dir, build, env)
+    expect((await keys.ensure('bot-1', CHAINS.robinhoodTestnet)).file).toBe(file)
+    expect((await keys.ensure('bot_1', CHAINS.robinhoodTestnet)).file).not.toBe(file)
+    expect((await keys.ensure('Bot-1', CHAINS.robinhoodTestnet)).file).not.toBe(file)
+  })
+
   it('never lets an agent id climb out of the keys folder', async () => {
     const dir = fresh()
     const { file } = await agentKeys(dir, build, {}).ensure('../../etc', CHAINS.solanaDevnet)

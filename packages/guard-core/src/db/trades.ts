@@ -187,16 +187,19 @@ export function listPositions(db: Db, agentId?: string): (Position & { agentId: 
 /**
  * Brings the agents' positions in a token down to what the hot wallet really holds, after a swap
  * landed (GC-66): a fill below the test run's, or a balance gone to zero, must not leave a position
- * the wallet cannot back. `first` loses the excess first, being the agent whose trade just landed.
+ * the wallet cannot back. Only the agents that wallet serves (`agents`) count; `first` loses the
+ * excess first, being the agent whose trade just landed.
  * Never raised: more onchain than booked may be someone else's airdrop.
  */
 export function capPositions(
   db: Db,
-  where: { chain: ChainId; token: string; first: string },
+  where: { chain: ChainId; token: string; first: string; agents: (id: string) => boolean },
   held: bigint,
   now: Date,
 ) {
-  const rows = listPositions(db).filter((p) => p.chain === where.chain && p.token === where.token)
+  const rows = listPositions(db).filter(
+    (p) => p.chain === where.chain && p.token === where.token && where.agents(p.agentId),
+  )
   rows.sort((a, b) => (a.agentId === where.first ? -1 : b.agentId === where.first ? 1 : 0))
   let excess = rows.reduce((sum, p) => sum + parseAmount(p.amount), 0n) - held
   for (const row of rows) {

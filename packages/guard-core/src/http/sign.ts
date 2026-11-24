@@ -69,10 +69,11 @@ type AgentKey = { chain: ChainId; address: string }
  * grant an attacker's key (ADR 006).
  */
 export function signRoutes(keys: PublicKeys, dir: string, agents: () => AgentKey[] = () => []) {
-  // The RPCs are public and fixed, so the policy is too; the agents' wallets are read per request.
-  const policy = `${csp(fromSignPage(signConfig(keys)).rpc)}; frame-ancestors 'none'`
+  const current = () => fromSignPage(signConfig(keys, agents()))
 
-  function send(reply: FastifyReply, type: string, body: string | Buffer) {
+  // Per request, as the page is: a cluster that has only agents' wallets needs its RPC allowed too.
+  function send(reply: FastifyReply, type: string, body: string | Buffer, page = current()) {
+    const policy = `${csp(page.rpc)}; frame-ancestors 'none'`
     return reply
       .header('content-type', type)
       .header('content-security-policy', policy)
@@ -94,13 +95,10 @@ export function signRoutes(keys: PublicKeys, dir: string, agents: () => AgentKey
       const template = await readFile(join(dir, 'index.template.html'), 'utf8').catch(
         () => undefined,
       )
+      const page = current()
       return template === undefined
         ? missing(reply)
-        : send(
-            reply,
-            'text/html; charset=utf-8',
-            pageHtml(template, fromSignPage(signConfig(keys, agents()))),
-          )
+        : send(reply, 'text/html; charset=utf-8', pageHtml(template, page), page)
     })
     app.get('/sign/:file', async (request, reply) => {
       const { file } = request.params as { file: string }

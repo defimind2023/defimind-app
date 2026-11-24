@@ -15,7 +15,6 @@ import type { ChainHost } from './http/owner-settings.js'
 import { readSettings } from './db/settings.js'
 import { applySettings, settingKeys } from './domain/settings.js'
 import { killTargets } from './kill-targets.js'
-import { scheduleBackups } from './service/backup.js'
 import { Wallets } from './service/wallets.js'
 
 const env = loadConfig()
@@ -94,6 +93,11 @@ const [app, publicApp] = await buildServers(
     keys,
     host,
     wallets,
+    backups: {
+      databaseUrl: config.DATABASE_URL,
+      hour: config.BACKUP_HOUR_UTC,
+      bucket: bucketConfig(config),
+    },
     ...(anchorPublisher === undefined ? {} : { anchorPublisher }),
     ...(vapid === undefined
       ? {}
@@ -143,18 +147,6 @@ if (publicAdmin(config)) {
       'and holds the admin token can pause, kill and read every agent',
   )
 }
-
-scheduleBackups(
-  {
-    db,
-    databaseUrl: config.DATABASE_URL,
-    now: () => new Date(),
-    log: app.log,
-    fetch,
-    bucket: bucketConfig(config),
-  },
-  config.BACKUP_HOUR_UTC,
-)
 
 await app.listen({ port: config.PORT, host: config.HOST })
 if (publicApp !== undefined) {
