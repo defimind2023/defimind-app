@@ -140,7 +140,8 @@ describe('stopping agents with their own wallets (CR-022)', () => {
     expect(new URL(shared.pageLink).searchParams.get('hot')).toBe('shared-hot')
     expect(new URL(own.pageLink).searchParams.get('hot')).toBe(OWN)
     expect(own.description).toMatch(/^agent-1's own wallet: /)
-    expect(own.wallet).toBeUndefined()
+    expect(own.wallet).toEqual({ agentId: 'agent-1', address: OWN })
+    expect(shared.wallet).toBeUndefined()
   })
 
   it("one agent's kill pauses it alone and removes only its own wallet's limit", async () => {

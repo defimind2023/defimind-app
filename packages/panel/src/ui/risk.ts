@@ -57,7 +57,7 @@ export function riskCard(risk: TokenRiskView) {
     el(
       'p',
       { class: 'muted' },
-      'These are facts about the token, not advice. A token can lose all its value.',
+      'Not financial advice. These are facts about the token, and a token can lose all its value.',
     ),
   )
 }

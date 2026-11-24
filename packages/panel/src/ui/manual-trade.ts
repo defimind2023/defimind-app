@@ -13,6 +13,7 @@ import { tokenIcon } from './risk.js'
 import { ownerTrading } from './token-search.js'
 
 const mono = (text: string) => el('span', { class: 'mono' }, text)
+const figure = (text: string) => el('span', { class: 'figures' }, text)
 
 function select(id: string, options: [string, string][]) {
   const node = el('select', { id })
@@ -29,7 +30,12 @@ function confirmCard(
   buy: boolean,
   back: () => void,
 ) {
-  const token = { token: risk.mint, decimals: risk.decimals }
+  // Decimals read onchain; the symbol, if the quote has one, is the venue's and sits beside the mint.
+  const token = {
+    token: risk.mint,
+    decimals: risk.decimals,
+    symbol: buy ? quote.symbolOut : quote.symbolIn,
+  }
   const spent = buy ? formatUsd(quote.amountIn) : units({ amount: quote.amountIn, ...token })
   const least = buy
     ? units({ amount: quote.minAmountOut, ...token })
@@ -45,16 +51,20 @@ function confirmCard(
       row(buy ? 'Spends' : 'Sells', mono(spent)),
       row('Receives at least', mono(least)),
       row('Quoted to receive', mono(expected)),
-      row('Slippage', `up to ${percent(quote.slippageBps)}`),
-      row('Price impact', percent(quote.priceImpactBps)),
+      row('Slippage', figure(`up to ${percent(quote.slippageBps)}`)),
+      row('Price impact', figure(percent(quote.priceImpactBps))),
       row(
-        'Selling it back',
-        quote.exitImpactBps === null ? 'no route found' : `${percent(quote.exitImpactBps)} impact`,
+        'Selling it back now',
+        quote.exitImpactBps === null
+          ? 'No route found'
+          : figure(`${percent(quote.exitImpactBps)} price impact`),
       ),
-      row('Venue', quote.venue),
+      row('Quoted by', quote.venue),
       row('Quoted', when(quote.quotedAt)),
     ),
-    ...quote.risks.map((code) => el('p', { class: 'flag' }, `Refused if sent: ${code}.`)),
+    ...quote.risks.map((code) =>
+      el('p', { class: 'flag' }, `This trade would be refused: ${code}.`),
+    ),
     ...quote.flags.map((flag) => el('p', { class: 'flag' }, `${flag}: ${FLAGS[flag] ?? flag}`)),
     el(
       'p',

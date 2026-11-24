@@ -20,11 +20,12 @@ export type Signing = { page: string; targets: KillTarget[] }
  * 15 minutes old. An agent's own wallet is named in its link, the shared one never is.
  */
 export function withLinks(txs: KillTransaction[], signing: Signing | undefined, issued: Date) {
-  return txs.map(({ wallet, ...tx }) => {
+  return txs.map((tx) => {
     const shared = signing?.targets.find((t) => t.chain === tx.chain)
     if (signing === undefined || shared === undefined) {
       return tx
     }
+    const { wallet } = tx
     const target: KillTarget = wallet === undefined ? shared : { ...shared, hot: wallet.address }
     return {
       ...tx,

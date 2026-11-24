@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { PublicKeys } from '../src/adapters/public-keys.js'
+import { rpcUrls } from '@defimind/onchain/sign-page'
 import { addWallet, type WalletRow } from '../src/db/wallets.js'
 import { CHAIN, harness, MERCHANT } from './harness.js'
 
@@ -71,6 +72,15 @@ describe('the signing page at /sign (CR-019)', () => {
     expect(filled.hot).toEqual({ devnet: HOT })
     expect(filled.agents).toEqual({ devnet: [MERCHANT] })
     expect(filled.evm['robinhood-testnet']).toMatchObject({ hot: ROBINHOOD_HOT, agents: [evm] })
+  })
+
+  it("allows the RPC of a cluster that has only an agent's wallet", async () => {
+    const solanaOnly: PublicKeys = { hotWallets: [{ chain: CHAIN, address: HOT }] }
+    const h = await harness({ keys: solanaOnly, env: { SIGN_DIR: build() } })
+    const evm = '0x2222222222222222222222222222222222222222'
+    addWallet(h.db, { agentId: 'agent-1', chain: 'eip155:46630', address: evm }, new Date())
+    const res = await h.app.inject({ url: '/sign/?action=enable' })
+    expect(res.headers['content-security-policy']).toContain(rpcUrls({})['robinhood-testnet'])
   })
 
   it('serves create and add-limit only; deposit and kill stay on the hosted page', async () => {

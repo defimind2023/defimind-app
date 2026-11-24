@@ -169,6 +169,17 @@ describe('the doctor', () => {
         message: expect.stringContaining('2026-11-03T03:00:00.000Z'),
       })
     })
+
+    it('warns when the last upload is over 26 hours old, and reads only a timestamp', async () => {
+      const d = { ...withBackup(3_600_000), bucket: true }
+      const dir = join(dirname(d.databaseUrl.slice('file:'.length)), 'backups')
+      writeFileSync(join(dir, 'last-upload'), '2026-11-01T03:00:00.000Z')
+      expect((await byId(d))['backup']).toMatchObject({ status: 'warn', fix: expect.any(String) })
+      writeFileSync(join(dir, 'last-upload'), `2026-11-03T03:00:00.000Z${'x'.repeat(10_000)}`)
+      const check = (await byId(d))['backup']
+      expect(check?.message).toContain('None has been uploaded')
+      expect(check?.message.length).toBeLessThan(200)
+    })
   })
 })
 
@@ -201,11 +212,12 @@ describe('public admin routes (CR-022)', () => {
       const check = (await byId(d))[`${CHAIN}:control`]
       expect(check).toMatchObject({ status: 'warn' })
       expect(check?.message).toContain('config authority')
-      expect(check?.fix).toContain('Ledger')
+      expect(check?.fix).toMatch(/^For larger balances/)
+      expect(check?.fix).toContain('both as config authority and as member')
       expect(check?.fix).not.toMatch(/threshold|2-of-3/)
     })
 
-    it('on EVM advises another owner or a 2-of-3', async () => {
+    it('on EVM advises a 2-of-3 or a replaced owner, never one more owner at threshold 1', async () => {
       const base = 'eip155:8453'
       const chain = new StubChain(base, 1_000_000n)
       vi.spyOn(chain, 'getVault').mockResolvedValue({

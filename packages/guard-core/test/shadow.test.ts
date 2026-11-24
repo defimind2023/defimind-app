@@ -54,7 +54,12 @@ describe('shadow mode', () => {
     h.clock.now = new Date(h.clock.now.getTime() + 2 * 86_400_000)
     await transfer(h, '500000')
     const view = (await h.agent('GET', '/v1/agent/budget/agent-1')).json()
-    expect(view.shadow).toEqual({ since: '2026-11-03T12:00:00.000Z', total: '1500000', count: 2 })
+    expect(view.shadow).toEqual({
+      since: '2026-11-03T12:00:00.000Z',
+      total: '1500000',
+      count: 2,
+      asked: { count: 0, flags: [] },
+    })
   })
 
   it('leaves the shadow summary out for an agent that never ran in shadow', async () => {
@@ -85,6 +90,8 @@ describe('shadow mode', () => {
     const large = (await transfer(h, '3000000')).json().intentId
     expect(wouldHave(h, small)).toMatchObject({ wouldAsk: false })
     expect(wouldHave(h, large)).toMatchObject({ wouldAsk: true })
+    const view = (await h.agent('GET', '/v1/agent/budget/agent-1')).json()
+    expect(view.shadow.asked).toEqual({ count: 1, flags: [] })
   })
 
   it('does not ask the owner, even above the threshold', async () => {

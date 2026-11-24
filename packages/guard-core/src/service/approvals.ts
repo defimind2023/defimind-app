@@ -25,16 +25,18 @@ export async function requestApproval(
   bot: BotNotifier,
   intent: PayIntent,
   simulation: SimulationResult,
-  ask: { flags: ApprovalFlag[]; pinned?: Pin; passkey: boolean },
+  ask: { flags: ApprovalFlag[]; pinned?: Pin; passkey: boolean; untested?: boolean },
   push?: Pusher,
 ): Promise<void> {
   saveIntent(db, { ...intent, status: 'pending_approval' })
-  const request: ApprovalRequest = {
+  // `untested`: a buy asked before its test run (CR-024), which runs once the owner approves.
+  const request: ApprovalRequest & { untested?: true } = {
     intent,
     simulation,
     approveBefore: intent.expiresAt,
     flags: ask.flags,
     passkey: ask.passkey,
+    ...(ask.untested === true ? { untested: true } : {}),
     ...(ask.pinned === undefined
       ? {}
       : { pinned: { recipient: ask.pinned.recipient, amount: ask.pinned.amount } }),
@@ -50,7 +52,7 @@ export async function askOwner(
   deps: Pick<PaymentDeps, 'db' | 'bot' | 'now' | 'log' | 'push'>,
   intent: PayIntent,
   simulation: SimulationResult,
-  ask: { flags: ApprovalFlag[]; pinned?: Pin; passkey: boolean },
+  ask: { flags: ApprovalFlag[]; pinned?: Pin; passkey: boolean; untested?: boolean },
 ): Promise<PayIntent> {
   const pending: PayIntent = { ...intent, status: 'pending_approval', rejectReasons: [] }
   try {

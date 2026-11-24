@@ -58,7 +58,7 @@ describe.each([390, 1280])('owner trading tools at %i px (CR-025)', (width) => {
     await page.getByLabel('Show unverified tokens').check()
     await page.getByText(/copies of real ones, under the same name and symbol/).waitFor()
     await page.getByText(FAKE, { exact: true }).waitFor()
-    await page.getByText('Not verified by Jupiter').waitFor()
+    await page.getByText('Jupiter says: not verified').waitFor()
 
     await page.getByRole('button', { name: 'Check risk' }).first().click()
     await page.getByText('No one can mint more: the supply is fixed.').waitFor()
@@ -66,6 +66,7 @@ describe.each([390, 1280])('owner trading tools at %i px (CR-025)', (width) => {
       .getByText(/Selling \$10\.00 of it back to the dollar now would move the price by 0\.08%/)
       .waitFor()
     await page.getByText('812,000 holders.').waitFor()
+    await page.getByText(/^Not financial advice\./).waitFor()
     await page.getByText(/A buy waits for you: First buy of this token/).waitFor()
     const card = await page.locator('.risk').textContent()
     expect(card).not.toMatch(/\bsafe\b/i)

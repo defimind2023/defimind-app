@@ -14,8 +14,14 @@ function folder(agentId: string): string {
     : `id-${createHash('sha256').update(agentId).digest('hex').slice(0, 32)}`
 }
 
+/**
+ * Only for ids in lowercase words joined by hyphens, so that two ids never share a variable:
+ * bot-1 and bot_1, or Bot and bot, would both read AGENT_WALLET_BOT_1_... otherwise.
+ */
 const envName = (agentId: string, chain: ChainId) =>
-  `AGENT_WALLET_${agentId}_${slug(chain)}_FILE`.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+  /^[a-z0-9]+(-[a-z0-9]+)*$/.test(agentId)
+    ? `AGENT_WALLET_${agentId}_${slug(chain)}_FILE`.toUpperCase().replace(/-/g, '_')
+    : undefined
 
 /**
  * The agents' keys under dir/agents/<agentId>/<chain> (0600), or the file AGENT_WALLET_<AGENT>_
@@ -30,7 +36,7 @@ export function agentKeys(
     async ensure(agentId, chain) {
       const svm = isSvm(chain)
       const file =
-        env[envName(agentId, chain)] ??
+        env[envName(agentId, chain) ?? ''] ??
         (await ensureKey(
           join(dir, 'agents', folder(agentId)),
           `${slug(chain)}${svm ? '.json' : ''}`,

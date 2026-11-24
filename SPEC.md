@@ -289,7 +289,9 @@ GET  /v1/agent/intents/:id  -> PayIntent
 GET  /v1/agent/budget/:agentId -> { spentToday, shadowSpentToday, dailyMax, perTxMax, hotWalletBalances, paused, chains, mandates }
   mandates: the agent's active mandates (CR-010).
   shadow?: { since, total, count }: since the agent's first shadowed payment, what shadow mode would
-  have spent in all and how many payments (CR-011). Absent when it never ran in shadow.
+  have spent in all and how many payments (CR-011). Absent when it never ran in shadow. It carries
+  asked: { count, flags }, how many of those live would have taken to the owner and the distinct
+  flags behind them, at most 16 (CR-024).
   chains: the CAIP-2 ids guard-core runs an adapter for AND this agent's Policy.chains allows, so an
   agent learns only where it may actually pay, never the operator's full setup.
 
@@ -704,7 +706,9 @@ pinned?: { recipient, amount } (the last executed payment to that domain, presen
 passkey: boolean (approve only through /owner/approve), and mandate?: Mandate when the request is to
 open a mandate rather than to pay (then intent is absent; approveBefore and simulation still come,
 simulation with an empty balanceChanges). A mandate request also carries ttlSeconds, how long the budget
-runs once approved: while pending, the mandate's expiresAt is only the approval deadline.
+runs once approved: while pending, the mandate's expiresAt is only the approval deadline. A buy asked
+before its test run (CR-024) carries untested: true, on the webhook, Web Push and the owner's pending
+list: it is funded and test-run only once approved.
 
 ## MCP tools (mcp-server)
 - paid_fetch { url, method?, headers?, body?, maxAmountUsd? }

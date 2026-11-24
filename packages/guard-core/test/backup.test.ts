@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { seal, signV4, upload, type BucketConfig } from '../src/adapters/bucket.js'
 import { loadConfig } from '../src/config.js'
 import { openDb } from '../src/db/client.js'
-import { backUp, prune, scheduleBackups, untilHour } from '../src/service/backup.js'
+import { backUp, prune, scheduleBackups, untilHour, UploadFailed } from '../src/service/backup.js'
 import { ADMIN_TOKEN, NOW } from './harness.js'
 
 const KEY = 'ab'.repeat(32)
@@ -122,6 +122,13 @@ describe('the daily backup (CR-024)', () => {
     expect(existsSync(join(deps.dir, 'backups', 'last-upload'))).toBe(true)
   })
 
+  it('tells an upload that failed from a backup that did', async () => {
+    const deps = { ...live(), bucket }
+    deps.fetch.mockResolvedValue(new Response(null, { status: 403 }))
+    await expect(backUp(deps)).rejects.toBeInstanceOf(UploadFailed)
+    expect(existsSync(join(deps.dir, 'backups', 'guard-2026-11-03.db'))).toBe(true)
+  })
+
   it('has nothing to back up in memory', async () => {
     expect(await backUp({ ...live(), databaseUrl: ':memory:' })).toBeUndefined()
   })
@@ -131,19 +138,27 @@ describe('the daily backup (CR-024)', () => {
     expect(untilHour(new Date('2026-11-03T03:00:00Z'), 3)).toBe(86_400_000)
 
     vi.useFakeTimers({ now: new Date('2026-11-03T02:59:00Z') })
-    const deps = { ...live(), now: () => new Date() }
+    const failed = vi.fn()
+    const deps = { ...live(), now: () => new Date(), failed }
     const days: string[] = []
     const run = vi.fn(async (d: { now: () => Date }) => {
       days.push(d.now().toISOString())
       if (days.length === 1) {
         throw new Error('disk full')
       }
+      if (days.length === 2) {
+        throw new UploadFailed('refused')
+      }
     })
     const schedule = scheduleBackups(deps, 3, run)
-    await vi.advanceTimersByTimeAsync(60_000 + 86_400_000)
+    await vi.advanceTimersByTimeAsync(60_000 + 2 * 86_400_000)
     schedule.stop()
-    expect(days).toEqual(['2026-11-03T03:00:00.000Z', '2026-11-04T03:00:00.000Z'])
-    expect(deps.log.error).toHaveBeenCalledOnce()
+    expect(days).toEqual([
+      '2026-11-03T03:00:00.000Z',
+      '2026-11-04T03:00:00.000Z',
+      '2026-11-05T03:00:00.000Z',
+    ])
+    expect(failed.mock.calls).toEqual([['backup'], ['upload']])
   })
 
   it('refuses a bucket without its keys', () => {

@@ -3,6 +3,7 @@ import type { ChainId, PayIntent, Policy } from '@defimind/shared'
 import { listAgents } from '../db/agents.js'
 import * as repo from '../db/repo.js'
 import { applyTrade, listPositions } from '../db/trades.js'
+import { listWallets } from '../db/wallets.js'
 import { evaluateTrade } from '../domain/trading.js'
 import { newIntent, reject, type PaymentDeps } from './payments.js'
 import { clearSwap, fetchQuote, VenueUnavailable, withQuote } from './swap.js'
@@ -41,19 +42,26 @@ export async function closePositions(deps: PaymentDeps): Promise<PayIntent[]> {
 /**
  * One token, under the agent that holds most of it at cost, or the first agent when none bought it
  * (an airdrop): every intent belongs to an agent. Once sold, every agent's position in it is closed.
- * An agent's own wallet (CR-022) holds that agent's tokens alone, so its sale is that agent's.
+ * An agent's own wallet (CR-022) holds that agent's tokens alone, so its sale is `owner`'s.
  */
 async function sell(
   deps: PaymentDeps,
   trader: ChainAdapter,
   held: { chain: ChainId; dollar: string; token: string; amount: string },
-  wallet?: string,
+  owner?: string,
 ): Promise<PayIntent | undefined> {
   const { db, now } = deps
-  const holders = listPositions(db, wallet)
+  // The shared wallet's tokens belong to the agents without an own wallet on this chain.
+  const separate = new Set(
+    listWallets(db)
+      .filter((w) => w.chain === held.chain && w.status === 'active')
+      .map((w) => w.agentId),
+  )
+  const holders = listPositions(db, owner)
     .filter((p) => p.chain === held.chain && p.token === held.token)
+    .filter((p) => owner !== undefined || !separate.has(p.agentId))
     .sort((a, b) => (BigInt(b.amount) > BigInt(a.amount) ? 1 : -1))
-  const agentId = wallet ?? holders[0]?.agentId ?? listAgents(db)[0]?.agentId
+  const agentId = owner ?? holders[0]?.agentId ?? listAgents(db)[0]?.agentId
   const policy = agentId === undefined ? undefined : repo.getPolicy(db, agentId)
   if (agentId === undefined || policy === undefined) {
     return undefined

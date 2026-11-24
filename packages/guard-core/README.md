@@ -417,7 +417,8 @@ Every route needs the owner's session. These routes serve Solana mainnet through
 Opt-in, per agent and chain. `POST /v1/owner/agents/:id/wallets { chain, assertion }` (step-up
 `agent_wallet` over `{ agentId, chain }`) makes the agent's own hot wallet under
 `KEYS_DIR/agents/<agentId>/<chain>` (0600), or takes the file `AGENT_WALLET_<AGENT>_<CHAIN>_FILE`
-names, for example `AGENT_WALLET_FLY_AGENT_SOLANA_MAINNET_FILE`. A second call returns the same
+names, for example `AGENT_WALLET_FLY_AGENT_SOLANA_MAINNET_FILE`. The variable is read only for an id
+in lowercase words joined by hyphens, so that two ids can never share one. A second call returns the same
 wallet. It answers the wallet's address, its gas and the `/sign` add-limit page that names it.
 
 - **Pending, then active.** Until guard-core reads the wallet's limit onchain, the agent keeps paying
@@ -665,12 +666,13 @@ With no destination, the copy goes to `backups/guard-<time>.db` next to the data
 **Daily backup (CR-024).** guard-core backs itself up every day at `BACKUP_HOUR_UTC` (default 3),
 to `backups/guard-<UTC date>.db` beside the database (0600). It keeps the newest 14, and a restart
 on the same day keeps the day's first. A failure is logged as `database backup failed` and tried
-again the next day. With `BACKUP_BUCKET_URL` (an S3-compatible bucket, path-style:
+again the next day, and the owner gets a `backup_failed` alert, which says whether the backup
+itself or only its upload failed. With `BACKUP_BUCKET_URL` (an S3-compatible bucket, path-style:
 `https://<endpoint>/<bucket>[/<prefix>]`), each backup is also uploaded as `<name>.enc`, sealed with
 AES-256-GCM under `BACKUP_ENCRYPTION_KEY`: 12-byte IV, then the ciphertext, then the 16-byte tag.
 The bucket needs `BACKUP_ACCESS_KEY_ID`, `BACKUP_SECRET_ACCESS_KEY` and the encryption key, or the
 start is refused; `BACKUP_REGION` defaults to `auto`. Keys and URLs are never logged. The doctor
-warns when the newest backup is over 26 hours old, and with a bucket it names the last upload.
+warns when the newest backup, or with a bucket the last upload, is over 26 hours old.
 
 Env vars are documented in [`.env.example`](./.env.example).
 

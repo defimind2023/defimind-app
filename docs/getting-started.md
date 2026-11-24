@@ -6,8 +6,8 @@ the panel walks you through the rest. You never edit a file or paste a key.
 > **Public beta.** DefiMind moves real money, it is new, and it has had no external audit. Put in
 > only what you can afford to lose. The signing page refuses a daily limit above 50 dollars.
 
-> **The one-click deployment is new.** If a step does not work as described here, stop and open an
-> issue with the step's number and what you saw, never a key or the setup code. The Fly.io route in
+> If a step does not work as described here, stop and open an issue with the step's number and what
+> you saw, never a key or the setup code. The Fly.io route in
 > the [README](../README.md) is the other way in; step 4 below, connecting your agent, is the same
 > for both.
 
@@ -102,6 +102,9 @@ More detail, including what an agent can and cannot do:
 - **Updates.** Your service never updates by itself, because it holds keys. To update, read the
   [CHANGELOG](../CHANGELOG.md), then in Render click **Manual Deploy**, then **Deploy latest
   commit**.
+
+- **Trading.** Agents can buy and sell tokens on Solana, under limits you set. It is off until you
+  turn it on: [`trading.md`](./trading.md).
 
 ## If something goes wrong
 

@@ -30,7 +30,7 @@ import type { PushService } from '../adapters/push.js'
 import { pusher } from '../service/push.js'
 import { integrityMonitor } from '../service/integrity.js'
 import type { AnchorPublisher } from '../service/anchor.js'
-import { startTimers } from './timers.js'
+import { type Backups, startTimers } from './timers.js'
 import { ownerSessionRoutes } from './owner-session.js'
 import { ownerSetupRoutes } from './owner-setup.js'
 import { clientIp } from './client-ip.js'
@@ -56,6 +56,7 @@ export interface ServerDeps {
   now?: () => Date
   /** Runs the expiry sweep on this interval. Off when unset, as in tests that drive it directly. */
   sweepMs?: number
+  backups?: Backups
   /** Signs receipts. Receipts are off without it. */
   receiptKey?: KeyObject
   /** Web Push to the owner's panel, with the VAPID public key the panel subscribes with. */
@@ -115,15 +116,7 @@ export async function buildServers(
     deps.integrity = integrityMonitor(deps, deps.receiptKey)
   }
   for (const [i, surface] of surfaces.entries()) {
-    await serve(
-      apps[i] as Server,
-      surface,
-      deps,
-      config,
-      options.killTargets ?? [],
-      options.push?.publicKey,
-      options,
-    )
+    await serve(apps[i] as Server, surface, deps, config, options)
   }
 
   startTimers(first, deps, options)
@@ -176,10 +169,9 @@ async function serve(
   surface: Surface,
   deps: X402Deps,
   config: Config,
-  killTargets: KillTarget[],
-  pushKey: string | undefined,
-  { keys, host }: Pick<ServerDeps, 'keys' | 'host'>,
+  { keys, host, killTargets = [], push }: ServerDeps,
 ) {
+  const pushKey = push?.publicKey
   const ipOf = clientIp(surface, config)
   if (surface !== 'private') {
     app.addHook('onRequest', hostCheck(allowedHosts(surface, config)))
