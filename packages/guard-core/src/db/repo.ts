@@ -1,5 +1,6 @@
 import type {
   Amount,
+  BudgetView,
   ChainId,
   PayIntent,
   Policy,
@@ -222,12 +223,7 @@ export function shadowSpentToday(db: Db, agentId: string, day: string): Amount {
 }
 
 /** Since the agent's first shadowed payment: when, what shadow mode would have spent, how often. */
-export function shadowSummary(
-  db: Db,
-  agentId: string,
-):
-  | { since: string; total: Amount; count: number; asked: { count: number; flags: string[] } }
-  | undefined {
+export function shadowSummary(db: Db, agentId: string): BudgetView['shadow'] {
   const rows = db
     .select({ amount: intents.amount, createdAt: intents.createdAt })
     .from(intents)

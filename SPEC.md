@@ -475,7 +475,7 @@ it answers 410 { error: "setup_done" } and SETUP_CODE is never accepted again. A
 Keys. At start, each key not given by env or file is generated once and stored under
 /data/keys (directory 0700, files 0600): a hot wallet per enabled chain, the receipt key, the VAPID
 key and the anchor key. A key given by env or file always wins, so existing deployments are
-unchanged. GET /v1/owner/keys -> { hotWallets: { chain, address }[], receiptKey, anchorKey? }
+unchanged. GET /v1/owner/keys -> { hotWallets: { chain, address, gas?: HotWalletGas }[], receiptKey, anchorKey? }
 returns public keys only; no route ever returns a private key.
 
 Settings. GET /v1/owner/settings -> { chains: { chain, rpcUrl?, vault? }[] }, one entry per enabled

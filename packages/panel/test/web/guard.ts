@@ -34,6 +34,7 @@ const TYPES: Record<string, string> = {
 const chain = CHAINS.baseSepolia
 const usd = getAddress(chain, 'usd')!
 const b64 = (bytes: Buffer) => bytes.toString('base64url')
+export const HOT_WALLET = 'HotWa11etSo1anaDevnetXk3q9Lr5Kc4Tz6Ym8Nb3Hs7'
 
 export interface Decision {
   kind: 'intent' | 'mandate'
@@ -71,6 +72,8 @@ export async function guardCore(
     tokens: [] as { agentId: string; stepUp?: { action: string; body: unknown } }[],
     /** guard-core's answer to an assertion it cannot verify, for the next decision. */
     refuseNextPasskey: false,
+    /** The shared spending wallet's SOL, as asked of guard-core; absent until it serves it. */
+    hotGas: undefined as { balance: string; minimum: string; symbol: string } | undefined,
     /** GC-68: what live would have asked, on the budget's shadow summary. */
     shadowAsked: undefined as { count: number; flags: string[] } | undefined,
     /** CR-013: the first receipt that no longer holds, as guard-core's integrity check reports it. */
@@ -337,6 +340,19 @@ export async function guardCore(
     }
     if (path === '/v1/owner/agents') {
       return send(200, { agents: overview().agents })
+    }
+    if (path === '/v1/owner/keys') {
+      return send(200, {
+        hotWallets: [
+          {
+            chain: CHAINS.solanaDevnet,
+            address: HOT_WALLET,
+            ...(state.hotGas === undefined ? {} : { gas: state.hotGas }),
+          },
+        ],
+        receiptKey: 'receipt-public-key',
+        agentWallets: [],
+      })
     }
     if (path === '/v1/owner/setup/progress') {
       const done = {

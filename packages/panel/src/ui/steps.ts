@@ -2,6 +2,7 @@ import type { SettingsView } from '../adapters/schemas.js'
 import { chainName } from '../domain/chains.js'
 import { inPhantom, isSolana, signLink, type StepId } from '../domain/guide.js'
 import { ownerKeyNote } from './owner-key.js'
+import { spendingCards } from './spending.js'
 import type { Context } from './context.js'
 import { depositCard } from './deposit.js'
 import { agent, live, next, rules, shadow } from './agent-steps.js'
@@ -127,6 +128,7 @@ async function deposit(ctx: Context): Promise<Child[]> {
   return [
     ...chains.map((chain) => depositCard(ctx, chain)),
     el('p', { class: 'muted' }, 'The balance updates once the chain confirms. Reload to check.'),
+    ...(await spendingCards(ctx)),
     next(ctx, 'agent'),
   ]
 }

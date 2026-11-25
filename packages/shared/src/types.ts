@@ -63,6 +63,53 @@ export interface TradingPolicy {
   maxSlippageBps: number
   /** Default 300. */
   maxPriceImpactBps: number
+  /** CR-026: per mint; each field overrides the agent's default for that mint. */
+  tokenLimits?: Record<Address, TokenLimit>
+  /** CR-026: absent keeps CR-021's limits. */
+  operations?: OperationLimits
+  /** CR-026: default { enabled: false, maxOpen: 10 }. */
+  orders?: { enabled: boolean; maxOpen: number }
+}
+
+export interface TokenLimit {
+  /** Overrides maxTradeUsd for a buy or a swap into this mint. */
+  maxBuyUsd?: Amount
+  /** Overrides maxPositionUsd for this mint, at cost. */
+  maxHeldUsd?: Amount
+}
+
+export interface OperationLimit {
+  maxTradeUsd: Amount
+  dailyMax: Amount
+}
+
+/** Absent buy defaults to maxTradeUsd and dailyTradeMax; absent sell is uncapped; absent swap uses buy's. */
+export interface OperationLimits {
+  buy?: OperationLimit
+  sell?: OperationLimit
+  swap?: OperationLimit
+}
+
+export type OrderKind = 'take_profit' | 'stop_loss'
+export type OrderStatus = 'open' | 'triggered' | 'filled' | 'cancelled' | 'failed'
+
+/** CR-026: filled as a sell to the chain's dollar under every trading check. */
+export interface Order {
+  id: string
+  agentId: string
+  chain: ChainId
+  token: Address
+  kind: OrderKind
+  amount: Amount
+  /** The chain's dollar, atomic, for the whole amount. */
+  triggerOut: Amount
+  maxSlippageBps: number
+  createdBy: 'agent' | 'owner'
+  status: OrderStatus
+  createdAt: string
+  expiresAt?: string
+  filledIntentId?: string
+  failReason?: RejectCode
 }
 
 /** CR-010: a budget for one task, inside the policy. */
@@ -231,6 +278,8 @@ export interface SwapQuote {
   risks: RejectCode[]
   flags: TradingFlag[]
   quotedAt: string
+  /** CR-026, token-to-token only: the higher of the two legs' dollar quotes, which the limits use. */
+  valueUsd?: Amount
 }
 
 /** CR-021: these send a buy to the owner even below the threshold. */
@@ -315,6 +364,17 @@ export type TradingRejectCode =
   | 'PRICE_IMPACT_TOO_HIGH'
   | 'NO_EXIT_ROUTE'
   | 'QUOTE_STALE'
+  /** CR-026 */
+  | 'TOKEN_LIMIT_EXCEEDED'
+  | 'SELL_EXCEEDED'
+  | 'SELL_DAILY_EXCEEDED'
+  | 'SWAP_EXCEEDED'
+  | 'SWAP_DAILY_EXCEEDED'
+  | 'INSUFFICIENT_POSITION'
+  | 'VALUATION_UNAVAILABLE'
+  | 'ORDERS_DISABLED'
+  | 'ORDER_LIMIT_EXCEEDED'
+  | 'GAS_RESERVE'
 
 /** Standing authority an EVM payment must never grant. */
 export type EvmRejectCode = 'APPROVAL_DETECTED' | 'PERMIT_DETECTED' | 'DELEGATION_DETECTED'

@@ -357,7 +357,20 @@ export const settingsView = z.object({
     .max(16),
 })
 export const keys = z.object({
-  hotWallets: z.array(z.object({ chain: text(64), address: text(128) })).max(16),
+  hotWallets: z
+    .array(
+      z.object({
+        chain: text(64),
+        address: text(128),
+        // #165: its native coin, for fees; absent when guard-core could not read it.
+        gas: z.object({ balance: atomic, minimum: atomic, symbol: text(16) }).optional(),
+      }),
+    )
+    .max(16),
+  agentWallets: z
+    .array(z.object({ agentId, chain: text(64), address: text(128) }))
+    .max(256)
+    .optional(),
   receiptKey: text(512),
   anchorKey: text(512).optional(),
 })
@@ -386,6 +399,7 @@ export type Overview = z.infer<typeof overview>
 export type ApprovalView = z.infer<typeof approvalRequest>
 export type MandateView = z.infer<typeof mandateRequest>
 export type AgentView = z.infer<typeof agentSummary>
+export type KeysView = z.infer<typeof keys>
 export type AgentWalletView = z.infer<typeof agentWallet>
 export type TokenInfo = z.infer<typeof tokenInfo>
 export type TokenRiskView = z.infer<typeof tokenRisk>

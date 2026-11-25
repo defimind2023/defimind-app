@@ -39,6 +39,16 @@ const REASONS: Record<RejectCode, string> = {
   QUOTE_STALE: 'the quote is too old to trade on',
   TOKEN_FREEZABLE: "the token's issuer can still freeze holders' tokens",
   TOKEN_EXTENSION_RISK: 'the token carries a transfer fee, transfer hook or permanent delegate',
+  TOKEN_LIMIT_EXCEEDED: "the trade is above the owner's limit for this token",
+  SELL_EXCEEDED: 'the sell is above the per-sell limit',
+  SELL_DAILY_EXCEEDED: "the sell would go over today's sell limit",
+  SWAP_EXCEEDED: 'the swap is above the per-swap limit',
+  SWAP_DAILY_EXCEEDED: "the swap would go over today's swap limit",
+  INSUFFICIENT_POSITION: 'the agent holds less of this token than the trade or order needs',
+  VALUATION_UNAVAILABLE: 'the trade could not be priced back to the dollar within the limits',
+  ORDERS_DISABLED: 'the owner has not turned on take-profit and stop-loss orders',
+  ORDER_LIMIT_EXCEEDED: 'the agent already has as many open orders as the owner allows',
+  GAS_RESERVE: 'the trade would leave the spending wallet without SOL for network fees',
 }
 
 /** Codes where the right next step is not the generic "do not retry". */

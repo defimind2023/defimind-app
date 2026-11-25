@@ -5,6 +5,7 @@ import { changedSettings } from '../domain/settings.js'
 import type { Context, Screen } from './context.js'
 import { button, card, el, when } from './dom.js'
 import { ownerKeyCard } from './owner-key.js'
+import { spendingCards } from './spending.js'
 
 function pushSwitch(ctx: Context, on: boolean) {
   const toggle = el('input', { id: 'push', type: 'checkbox', role: 'switch' })
@@ -81,15 +82,17 @@ function chainsCard(ctx: Context, current: SettingsView['chains']) {
 }
 
 export async function settings(ctx: Context): Screen {
-  const [{ passkeys }, push, { chains }] = await Promise.all([
+  const [{ passkeys }, push, { chains }, spending] = await Promise.all([
     ctx.api.passkeys(),
     pushEnabled(),
     ctx.api.settings(),
+    spendingCards(ctx),
   ])
   return [
     el('h1', {}, 'Settings'),
     chainsCard(ctx, chains),
     chains.length > 0 && ownerKeyCard(chains.map((c) => c.chain)),
+    ...spending,
     card(el('h2', {}, 'Notifications'), pushSwitch(ctx, push)),
     card(
       el('h2', {}, 'Passkeys'),
