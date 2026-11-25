@@ -141,8 +141,11 @@ describe('keys made on the server (CR-019)', () => {
 
     const h = await harness({ keys })
     const owner = await signedIn(h)
+    // The fee coin of each hot wallet whose chain runs, as the spending-wallet card shows it.
+    const [solana, evm] = keys.hotWallets
     expect((await owner.call('GET', '/v1/owner/keys')).json()).toEqual({
       ...keys,
+      hotWallets: [{ ...solana, gas: { balance: '0', minimum: '0', symbol: 'TEST' } }, evm],
       agentWallets: [],
     })
     expect((await h.app.inject({ method: 'GET', url: '/v1/owner/keys' })).statusCode).toBe(401)

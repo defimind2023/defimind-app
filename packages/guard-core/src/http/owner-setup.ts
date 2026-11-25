@@ -46,11 +46,17 @@ export function ownerSetupRoutes(deps: PaymentDeps, origin: string, setupCode?: 
 }
 
 /** Public halves only: no route ever answers a private key (ADR 006). */
-export function ownerKeysRoute(keys: PublicKeys, db: PaymentDeps['db']) {
+export function ownerKeysRoute(keys: PublicKeys, deps: Pick<PaymentDeps, 'db' | 'chains'>) {
+  /** The fee coin each shared hot wallet holds, for the panel's spending-wallet card. */
+  const withGas = (wallet: PublicKeys['hotWallets'][number]) =>
+    (deps.chains.get(wallet.chain)?.getHotWalletGas() ?? Promise.reject(new Error('no adapter')))
+      .then((gas) => ({ ...wallet, gas }))
+      .catch(() => wallet)
   return async (app: FastifyInstance) => {
     app.get('/v1/owner/keys', async () => ({
       ...keys,
-      agentWallets: listWallets(db).map(({ agentId, chain, address }) => ({
+      hotWallets: await Promise.all(keys.hotWallets.map(withGas)),
+      agentWallets: listWallets(deps.db).map(({ agentId, chain, address }) => ({
         agentId,
         chain,
         address,

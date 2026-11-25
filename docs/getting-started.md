@@ -18,7 +18,8 @@ the panel walks you through the rest. You never edit a file or paste a key.
   pricing page has the current price.
 - [Phantom](https://phantom.app/download) on your phone or in your browser, with a new wallet you
   use for nothing else.
-- About 1 dollar of SOL in that wallet for network fees, and the USDC your agents may spend.
+- About 2 dollars of SOL in that wallet for network fees (half of it goes to DefiMind's spending
+  wallet, under "Add money" below), and the USDC your agents may spend.
 - The computer where your AI agent runs (Claude Code, Claude Desktop or Cursor).
 
 ## 1. Put DefiMind online
@@ -60,7 +61,11 @@ taking your word for it. In short:
    touch the rest of your wallet.
 4. **Set a daily limit.** You type the most the vault may pay out in a day, up to 50 during the
    beta. The vault itself enforces it, even if DefiMind were broken into.
-5. **Add money.** Move USDC from your wallet into the vault. Start small.
+5. **Add money.** Move USDC from your wallet into the vault. Start small. This step also shows
+   DefiMind's **spending wallet**, in full, with **Copy address**. From Phantom, send it about 1
+   dollar of SOL: it pays the network fees when it draws from the vault and when it trades. The
+   panel shows its balance there and in **Settings**, and the guide waits at **Try it safely**
+   until it has enough.
 6. **Connect your agent.** The panel gives the agent its own key. See the next section.
 7. **Choose the rules.** How much the agent may pay at once and per day, and from which amount it
    must ask you first.

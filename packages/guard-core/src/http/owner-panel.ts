@@ -77,7 +77,7 @@ export function ownerPanelRoutes(
   return async (app: FastifyInstance) => {
     await app.register(ownerExecutions(deps))
     if (setup.keys !== undefined) {
-      await app.register(ownerKeysRoute(setup.keys, db))
+      await app.register(ownerKeysRoute(setup.keys, deps))
     }
     if (setup.host !== undefined) {
       await app.register(ownerSettingsRoutes(deps, setup.host, stepUp))

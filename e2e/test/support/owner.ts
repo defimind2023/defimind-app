@@ -14,17 +14,17 @@ export async function owner(s: Stack) {
   await s.admin('POST', '/v1/admin/passkeys', { response: device.register(challenge) })
 
   let cookie = ''
-  const send = (url: string, payload: object, method: 'GET' | 'POST') =>
+  const send = (url: string, payload: object, method: 'GET' | 'POST' | 'PUT') =>
     s.guard.inject({
       method,
       url,
       headers: { ...PANEL, cookie },
-      ...(method === 'POST' ? { payload } : {}),
+      ...(method === 'GET' ? {} : { payload }),
     })
   const call = async (
     url: string,
     payload: object = {},
-    method: 'GET' | 'POST' = 'POST',
+    method: 'GET' | 'POST' | 'PUT' = 'POST',
   ): Promise<{ status: number; body: Record<string, unknown> }> => {
     const res = await send(url, payload, method)
     return { status: res.statusCode, body: res.json<Record<string, unknown>>() }

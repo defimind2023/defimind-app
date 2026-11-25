@@ -30,7 +30,7 @@ export async function requestApproval(
 ): Promise<void> {
   saveIntent(db, { ...intent, status: 'pending_approval' })
   // `untested`: a buy asked before its test run (CR-024), which runs once the owner approves.
-  const request: ApprovalRequest & { untested?: true } = {
+  const request: ApprovalRequest = {
     intent,
     simulation,
     approveBefore: intent.expiresAt,

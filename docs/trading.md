@@ -7,6 +7,12 @@ can also trade by hand from the panel. Trading is off for every agent until you 
 > what the transaction really does. It does not judge whether a token is a good buy. A token can lose
 > all its value.
 
+## Before the first trade
+
+DefiMind's spending wallet pays each trade's network fee, and about 0.002 SOL the first time it
+holds a new token. Keep about 1 dollar of SOL in it: the panel shows its address and balance
+under **Add money** and in **Settings**, as in [getting-started](./getting-started.md). The vault needs USDC for the buys.
+
 ## Turn trading on for an agent
 
 In the panel, open the agent and find **Trading**:
@@ -27,7 +33,7 @@ as payments.
 
 **Start in shadow mode.** In shadow mode the agent's trades are checked and test-run in full, but
 nothing is signed. The agent page shows what it would have bought, and how often a live trade would
-have asked you first. Switch to live with your passkey once you are happy with what you see.
+have asked you first. Press **Go live with passkey** once you are happy with what you see.
 
 ## Allow a token: search, then read the risk card
 
@@ -47,7 +53,8 @@ it. Unverified tokens are hidden until you tick **Show unverified tokens**.
 
 ## Trade by hand
 
-On an agent with trading on, **Trade by hand** opens a trade for that agent:
+On an agent with trading on and at least one token allowed, **Trade by hand** opens a trade for that
+agent:
 
 1. Choose **Buy with dollars** or **Sell back to dollars**, the token, and the amount.
 2. **Get quote** shows what you would receive at least, the slippage, the price impact, and the cost

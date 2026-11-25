@@ -1,3 +1,5 @@
+import { chainName } from '../domain/chains.js'
+import { lowGas } from '../domain/wallets.js'
 import { formatUsd } from '../domain/money.js'
 import { chainRules, loosens, vaulted } from '../domain/policy.js'
 import { mcpCommand, type StepId } from '../domain/guide.js'
@@ -114,7 +116,7 @@ export async function shadow(ctx: Context): Promise<Child[]> {
   if (found === undefined) {
     return [el('p', {}, 'First connect an agent.'), next(ctx, 'agent', 'Back to the agent')]
   }
-  const budget = await ctx.api.budget(found.agentId)
+  const [budget, short] = await Promise.all([ctx.api.budget(found.agentId), lowSpending(ctx)])
   const total = budget.shadow?.total ?? budget.shadowSpentToday ?? '0'
   return [
     el(
@@ -124,9 +126,29 @@ export async function shadow(ctx: Context): Promise<Child[]> {
     ),
     el('p', { class: 'shadow-total' }, `Would have paid so far: ${formatUsd(total)}`),
     button('Check again', () => ctx.go({ name: 'guide', step: 'shadow' }, true)),
-    next(ctx, 'live'),
+    ...short.map(({ chain, symbol }) =>
+      el(
+        'p',
+        { class: 'flag' },
+        `Before going live, send a little ${symbol} to the spending wallet on ${chainName(chain)}: it pays its own network fees. Its address is on the Add money step.`,
+      ),
+    ),
+    short.length === 0 ? next(ctx, 'live') : next(ctx, 'deposit', 'Back to Add money'),
   ]
 }
+
+/** The chains whose shared spending wallet has too little of its native coin for fees (#165). */
+const lowSpending = (ctx: Context) =>
+  ctx.api
+    .keys()
+    .then(({ hotWallets }) =>
+      hotWallets.flatMap(({ chain, gas }) =>
+        gas !== undefined && gas.symbol !== '' && lowGas(gas)
+          ? [{ chain, symbol: gas.symbol }]
+          : [],
+      ),
+    )
+    .catch(() => [])
 
 export async function live(ctx: Context): Promise<Child[]> {
   const found = await firstAgent(ctx)

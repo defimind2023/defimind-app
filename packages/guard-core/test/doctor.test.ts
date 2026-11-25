@@ -58,7 +58,10 @@ describe('the doctor', () => {
       minimum: '2',
       symbol: 'SOL',
     })
-    expect((await byId(d))[`${CHAIN}:gas`]).toMatchObject({ status: 'warn' })
+    expect((await byId(d))[`${CHAIN}:gas`]).toMatchObject({
+      status: 'warn',
+      fix: 'Send some SOL to stub, the address of the hot wallet.',
+    })
   })
 
   it('fails a read that throws without quoting the error, which may carry a URL or a key', async () => {

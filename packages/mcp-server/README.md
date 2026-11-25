@@ -44,6 +44,84 @@ server refuses a token file they can read.
 
 The rest of this section does the same by hand.
 
+### Trading agent quickstart
+
+> **Not financial advice.** DefiMind bounds what an agent's trades can cost and checks what each one
+> really does. It does not judge whether a token is a good buy, and a token can lose all its value.
+
+From "panel installed" to "my agent trades under my limits":
+
+1. **In the panel:** turn trading on for the agent, set its limits, allow the tokens it may buy, and
+   leave it in **shadow mode**. See [Trading](../../docs/trading.md).
+2. **Connect your client** with the agent's id and token. The [Quick setup](#quick-setup) command
+   prints the config for Claude Code, Claude Desktop or Cursor and keeps the token in a file only you
+   can read. For Claude Desktop or Cursor it looks like this:
+
+   ```json
+   {
+     "mcpServers": {
+       "defimind": {
+         "command": "/path/to/DefiMind/packages/mcp-server/node_modules/.bin/tsx",
+         "args": ["/path/to/DefiMind/packages/mcp-server/src/main.ts"],
+         "env": {
+           "GUARD_URL": "https://<your DefiMind>",
+           "AGENT_ID": "my-agent",
+           "AGENT_TOKEN_FILE": "/home/you/.defimind/mcp/my-agent.token",
+           "DEFAULT_CHAIN": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Give the agent its rules:** clients that show MCP prompts list `trading-agent`. Pick it to start
+   a conversation with safe defaults: quote before every swap, report flags, respect refusals, never
+   split a buy to get under a limit.
+4. **Try it in shadow mode.** Every trade is checked and test-run in full, and nothing is signed: the
+   result says `shadowed`. Switch the agent to live in the panel, with your passkey, once you are
+   happy with what you see.
+
+**The three tools.**
+
+| Tool            | Returns                                                                                                                                                                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quote`         | Nothing traded. The expected and minimum amount out, slippage, price impact, whether it can be sold back, every risk that would refuse a buy, every flag that sends it to you |
+| `swap`          | An intent id and its status: `executed`, `pending_approval`, `shadowed` or `rejected` with its reasons                                                                        |
+| `get_portfolio` | Each token held, by mint, with its amount and what it cost; and today's buys against the daily trade limit                                                                    |
+
+`get_portfolio` shows what each position cost, not what it is worth now. For a current value, ask the
+agent to `quote` selling the amount it holds.
+
+**When a swap says `pending_approval`.** The buy is waiting for you in the panel: it is at or above
+the approval threshold, it is the first buy of that token (`NEW_TOKEN`), or the token can still be
+minted (`MINT_AUTHORITY`). Nothing has left the vault. The agent should tell you, then poll
+`check_intent` every 15 to 30 seconds until it settles. It must not retry the trade another way to
+avoid the wait: a smaller amount, another route, or a split. Sells never wait.
+
+**Example prompts.** Replace `<mint>` with the token's full mint address, which is what identifies
+it; a name or symbol can be copied by anyone.
+
+- "Quote $2 of `<mint>`. Buy it only if the quote shows no risks and no flags."
+- "Show my portfolio and what each position cost."
+- "Sell all my `<mint>` back to USDC."
+
+**When a trade is refused,** the result names each code and says what to do; the agent should tell
+you rather than try again. In plain words:
+
+- **Not allowed:** trading is off for this agent (`TRADING_DISABLED`), the token is not on its list
+  (`TOKEN_NOT_TRADABLE`), or the agent is paused (`PAUSED`).
+- **Over a limit:** the buy is above "Each buy" (`TRADE_EXCEEDED`), today's buys would pass "All
+  buys in a day" (`TRADE_DAILY_EXCEEDED`), or the agent would hold more of the token than "Held in one
+  token" (`POSITION_EXCEEDED`).
+- **The market:** more slippage than allowed (`SLIPPAGE_TOO_HIGH`), the trade would move the price
+  too much (`PRICE_IMPACT_TOO_HIGH`), or the quote went stale (`QUOTE_STALE`, the one code worth one
+  more try).
+- **The token:** its issuer can freeze holders (`TOKEN_FREEZABLE`), it has a Token-2022 extension that
+  can take or lock tokens (`TOKEN_EXTENSION_RISK`), or there is no way to sell it back
+  (`NO_EXIT_ROUTE`).
+
+The full table is in [Why a trade is refused](../../docs/trading.md#why-a-trade-is-refused).
+
 ### What your agent can and cannot do
 
 The agent **can**:

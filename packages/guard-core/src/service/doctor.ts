@@ -41,7 +41,7 @@ export async function doctor(deps: DoctorDeps): Promise<DoctorCheck[]> {
   const own = (await deps.wallets?.all().catch(() => [])) ?? []
   const chains = await Promise.all([
     ...[...deps.chains.values()].map((adapter) => chainChecks(deps, adapter)),
-    ...own.map(({ adapter, agentId }) => chainChecks(deps, adapter, agentId)),
+    ...own.map(({ adapter, agentId, address }) => chainChecks(deps, adapter, { agentId, address })),
   ])
   return [
     database(deps),
@@ -79,8 +79,9 @@ function database({ db, now }: { db: Db; now: () => Date }): DoctorCheck {
 async function chainChecks(
   deps: DoctorDeps,
   adapter: ChainAdapter,
-  agentId?: string,
+  own?: { agentId: string; address: string },
 ): Promise<DoctorCheck[]> {
+  const agentId = own?.agentId
   const id = adapter.chain
   const chain = chainName(id)
   const wallet = agentId === undefined ? 'the hot wallet' : `${agentId}'s own wallet`
@@ -102,13 +103,19 @@ async function chainChecks(
     }),
     attempt('gas', async () => {
       const gas = await adapter.getHotWalletGas()
-      return parseAmount(gas.balance) < parseAmount(gas.minimum)
-        ? {
-            status: 'warn',
-            message: `${Wallet} on ${chain} is low on ${gas.symbol} for fees.`,
-            fix: `Send some ${gas.symbol} to the address of ${wallet}.`,
-          }
-        : { status: 'ok', message: `${Wallet} on ${chain} has enough ${gas.symbol} for fees.` }
+      if (parseAmount(gas.balance) >= parseAmount(gas.minimum)) {
+        return { status: 'ok', message: `${Wallet} on ${chain} has enough ${gas.symbol} for fees.` }
+      }
+      // The address is public, and the owner needs it in full to send the coin.
+      const address = own?.address ?? (await hotAddress(adapter))
+      return {
+        status: 'warn',
+        message: `${Wallet} on ${chain} is low on ${gas.symbol} for fees.`,
+        fix:
+          address === undefined
+            ? `Send some ${gas.symbol} to the address of ${wallet}.`
+            : `Send some ${gas.symbol} to ${address}, the address of ${wallet}.`,
+      }
     }),
     attempt('balance', async () => {
       const token = deps.usdc.get(id)
@@ -161,6 +168,11 @@ function vaultControl(
         message: `One key can empty the vault on ${chain}.`,
         fix: 'For larger balances, make the Safe a 2-of-3, or replace its owner with a hardware wallet. Another owner added at threshold 1 does not help: either key could still move the funds alone.',
       }
+}
+
+/** The hot wallet an adapter signs with, which its allowance names as the delegate. */
+async function hotAddress(adapter: ChainAdapter): Promise<string | undefined> {
+  return (await adapter.getAllowanceState().catch(() => undefined))?.delegate
 }
 
 /** A check whose read throws fails, and says which read, never the error text: it may hold a URL. */
